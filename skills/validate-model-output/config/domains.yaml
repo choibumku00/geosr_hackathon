@@ -1,0 +1,55 @@
+# 변수 standard_name / 이름 패턴 → 도메인 (router 의 데이터원, taxonomy C절 기반)
+domains:
+  meteorology:
+    standard_names:
+      - air_temperature
+      - eastward_wind
+      - northward_wind
+      - air_pressure_at_mean_sea_level
+      - precipitation_amount
+      - relative_humidity
+    name_patterns:
+      - "^t2m$"
+      - "^2t$"
+      - "^tmp$"
+      - "^u10$"
+      - "^v10$"
+      - "ugrd"
+      - "vgrd"
+      - "mslp"
+      - "prmsl"
+  ocean_temp_salinity:
+    standard_names:
+      - sea_water_temperature
+      - sea_surface_temperature
+      - sea_water_salinity
+      - sea_surface_salinity
+    name_patterns:
+      - "^sst$"
+      - "^sss$"
+      - "^thetao$"
+      - "^so$"
+      - "salin"
+  waves:
+    standard_names:
+      - sea_surface_wave_significant_height
+    name_patterns:
+      - "^hs$"
+      - "hm0"
+      - "swh"
+  currents:
+    standard_names:
+      - eastward_sea_water_velocity
+      - northward_sea_water_velocity
+    name_patterns:
+      - "^uo$"
+      - "^vo$"
+  sea_level:
+    standard_names:
+      - sea_surface_height_above_geoid
+      - sea_surface_height_above_reference_ellipsoid
+    name_patterns:
+      - "^ssh$"
+      - "^sla$"
+      - "^adt$"
+      - "zos"
