@@ -8,6 +8,19 @@
 
 ---
 
+## 0.5 M1 실측 검증 결과 (TC-A1 `discover` 대조 — 예측이 증거로 확인됨)
+
+`python scripts/cli.py discover project/data` 실행 결과:
+- ✅ **기상쌍 정상**: ERA5→`meteorology`/reference/1d, GFS→`meteorology`/output/2d (TC-B 통과).
+- ❌ **R1 확인**: 부이 CSV **30개 전부 `(열기 실패: 미지포맷)`** — utf-8 디코딩 실패. (크래시는 없음 = no-crash 설계 정상)
+- ⚠️ **R2 확인 + 신규**: WW3 5개가 `coord_kind=1d`로 **오판**(실제 mesh), 도메인 **`meteorology`로 오분류**, role=unknown.
+  - **신규 발견(R2b/R4)**: WW3가 `uwnd/vwnd`(eastward/northward_wind)를 포함 → router 투표 **기상 2 > 파랑 1(`hs`)**. 도메인 판정이 풍성분에 끌려감.
+  - 또 `변수` 칼럼에 `longitude,latitude,tri,MAPSTA`(좌표·격자 정의)가 데이터변수로 노출 → 표시·판정에서 좌표/보조변수 제외 필요.
+
+→ 아래 R1·R2는 **예측이 아니라 확인된 결함**. R4에 "대표변수 우선 도메인 판정"을 추가한다.
+
+---
+
 ## R1. CSV 인코딩 자동감지 + 한글 헤더 매핑 〔치명적 · M1(io_detect)+M3(aliases)〕
 
 **증상(재현됨):** 부이 CSV는 **cp949**, 컬럼이 **한글**(`유의파고(m)`·`파주기(sec)`·`파향(deg)`·`수온(°C)`·`풍속(m/s)`…).
@@ -59,6 +72,11 @@ xr.open_dataset("geo_ww3_anal_20240916.nc").sizes
 | 바람 | `uwnd/vwnd` | `풍속/풍향` | `u10/v10` |
 
 > 주의(검증 함정): **파주기 정의 불일치** — WW3 `t01`(평균주기)와 부이 `파주기`(첨두/영점교차 여부 불명)는 정의가 다를 수 있음 → 리포트에 정의 명시·동일정의 비교 권고(§G).
+
+**추가(R4b) — 도메인 판정 보강 (M1 검증서 확인):**
+- **대표변수 우선**: 다수결 대신, 도메인 고유 "headline" 변수에 가중. WW3는 `hs`(파랑) 존재 시 풍성분(`uwnd/vwnd`)보다 **파랑 우선** (현재 기상으로 오분류됨).
+- **좌표·보조변수 제외**: `longitude/latitude/tri/MAPSTA/depth` 등은 도메인 투표·변수표시에서 제외(데이터변수로 새는 문제 확인됨).
+- **role 힌트 보강**: 파일명 `anal`(분석/모델 산출)도 output 후보 힌트로 추가(현재 WW3 role=unknown).
 
 ## R5. (마이너) WW3 상태맵·partition 〔낮음 · M2/M4〕
 - `MAPSTA`(status map: 해양/육지/비활성 node) → 비활성 node 마스킹(가짜 결측 방지).
