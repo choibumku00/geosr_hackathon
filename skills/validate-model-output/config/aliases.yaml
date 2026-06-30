@@ -1,0 +1,34 @@
+# 변수 별칭 매핑: CF 표준명 → 모델/관측/재분석 별칭 + 한글 헤더
+# SAMPLE — 실데이터 헤더가 다르면 이 파일에 항목을 추가/보강하라.
+# 별칭은 소문자로 정규화해 매칭한다(aliases.py 참조).
+aliases:
+  significant_wave_height:
+    - hs
+    - hm0
+    - swh
+    - 유의파고
+  wave_period:
+    - t01
+    - tp
+    - fp
+    - mwp
+    - 파주기
+  wave_direction:
+    - dir
+    - dp
+    - mwd
+    - 파향
+  sea_water_temperature:
+    - sst
+    - thetao
+    - 수온
+  eastward_wind:
+    - uwnd
+    - u10
+    - ugrd
+  northward_wind:
+    - vwnd
+    - v10
+    - vgrd
+  wind_speed:
+    - 풍속
