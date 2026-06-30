@@ -1,5 +1,17 @@
 submit/
+.venv/
+.DS_Store
+project/data/
+project/*.pdf
+__pycache__/
+*.pyc
 
-# 대용량 샘플 NetCDF (GitHub 100MB 제한 초과 — 로컬에만 보관)
-project/sample_data/**/*.nc
-project/sample_data/*.nc
+# 큰 NetCDF/GRIB 원본은 커밋 금지 (실수 방지) — project/sample_data/**/*.nc 포함
+*.nc
+*.nc4
+*.grib
+*.grib2
+*.grb
+# 단, 스킬의 소형 테스트 fixture는 재현성 위해 예외로 포함
+!skills/**/data/*.nc
+!skills/**/tests/**/*.nc
