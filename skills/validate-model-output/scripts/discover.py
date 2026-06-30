@@ -6,7 +6,7 @@ from inspect_file import probe
 
 _SCAN_EXTS = (".nc", ".nc4", ".csv", ".txt", ".tsv", ".dat", ".grib", ".grib2", ".grb")
 
-_OUTPUT_HINTS = ("fcst", "forecast", "model", "pred", "output", "gfs", "wrf", "hindcast")
+_OUTPUT_HINTS = ("fcst", "forecast", "model", "pred", "output", "gfs", "wrf", "hindcast", "anal")
 _REF_HINTS = ("rean", "reanalysis", "era5", "glorys", "obs", "buoy", "argo",
               "gauge", "sat", "ref", "truth", "waverys")
 
