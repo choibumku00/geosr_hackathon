@@ -22,3 +22,10 @@ project/presentation/package*.json
 results/
 inventory.json
 **/inventory.json
+
+# 스킬 실행 stray 산출물(커밋 금지)
+skills/**/%TEMP%/
+skills/**/inventory.json
+skills/**/report.json
+skills/**/report.md
+skills/**/results/
