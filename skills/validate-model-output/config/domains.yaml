@@ -18,6 +18,10 @@ domains:
       - "vgrd"
       - "mslp"
       - "prmsl"
+      - "dpt"
+      - "prate"
+      - "dswrf"
+      - "gust"
   ocean_temp_salinity:
     standard_names:
       - sea_water_temperature

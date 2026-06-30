@@ -9,6 +9,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from discover import discover  # noqa: E402
 from inspect_file import probe  # noqa: E402
+from io_detect import open_dataset, UnknownFormatError  # noqa: E402
+from qc import run_qc  # noqa: E402
+from report import write_report, render_markdown  # noqa: E402
 
 
 def _print_inventory(result: dict) -> None:
@@ -40,6 +43,24 @@ def cmd_inspect(args) -> int:
     return 0
 
 
+def cmd_validate(args) -> int:
+    out_dir = args.out or os.getcwd()
+    try:
+        d = open_dataset(args.file)
+    except (UnknownFormatError, OSError) as e:
+        qc = {"checks": [{"check": "open", "variable": None, "status": "FAIL",
+                          "evidence": f"열기 실패: {e}"}],
+              "summary": {"PASS": 0, "FAIL": 1, "WARN": 0}, "ok": False}
+        print(render_markdown(qc, args.file))
+        write_report(qc, args.file, out_dir)
+        return 1
+    qc = run_qc(d)
+    print(render_markdown(qc, args.file))
+    jpath, mpath = write_report(qc, args.file, out_dir)
+    print(f"\n[리포트 저장] {mpath}")
+    return 0 if qc["ok"] else 1
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="validate-model-output")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -52,6 +73,11 @@ def main(argv=None) -> int:
     i = sub.add_parser("inspect", help="단일 파일 구조 프로브")
     i.add_argument("file")
     i.set_defaults(func=cmd_inspect)
+
+    v = sub.add_parser("validate", help="층위1 QC (값범위·결측·격자·시간)")
+    v.add_argument("file")
+    v.add_argument("--out", default=None, help="report.json/md 저장 폴더")
+    v.set_defaults(func=cmd_validate)
 
     args = p.parse_args(argv)
     return args.func(args)
