@@ -145,13 +145,19 @@ def circular_corr(
     Returns
     -------
     float
-        원형 상관계수.
+        원형 상관계수. 분산 0·상수·빈 배열이면 nan (크래시·경고 없음).
 
     Notes
     -----
-    SAMPLE — 모든 값이 동일한 **상수 배열**이면 sin(f - f_bar)=0 → 분모 0 → nan 반환.
-    변동이 있는 배열에서 f==o 이면 1.0 반환(완전 상관).
+    SAMPLE — 모든 값이 동일한 **상수 배열**이면 평균 합성 벡터 길이 R = 1 →
+    분산 0 → nan 반환.  변동이 있는 배열에서 f==o 이면 1.0 반환(완전 상관).
     실데이터에선 분산 확인 후 사용하라.
+
+    구현 노트: ``denominator == 0`` 만으로는 py3.9/구버전 NumPy 에서
+    arctan2 round-trip 부동소수 오차로 분모가 정확히 0 이 되지 않을 수 있다.
+    이를 막기 위해 arctan2 계산 전에 평균 합성 벡터 길이 R 을 점검한다.
+    상수 배열이면 sin²+cos²=1 에 의해 R = 1.0 이 정확하게 성립하므로
+    Python/NumPy 버전에 무관하게 안전하게 NaN 을 반환한다.
 
     Examples
     --------
@@ -161,7 +167,7 @@ def circular_corr(
     >>> circular_corr(f, f)
     1.0
 
-    SAMPLE — 상수 배열 → 분모 0 → nan:
+    SAMPLE — 상수 배열 → R=1(분산 0) → nan:
     >>> g = np.array([45.0, 45.0, 45.0, 45.0])
     >>> import math; math.isnan(circular_corr(g, g))
     True
@@ -175,12 +181,32 @@ def circular_corr(
     f = _to_array(forecast_deg)
     o = _to_array(observed_deg)
 
+    # 빈 배열 / 유효 쌍 부족 가드 (RuntimeWarning 방지)
+    valid = ~(np.isnan(f) | np.isnan(o))
+    if int(valid.sum()) < 2:
+        return float("nan")
+
     # 각 배열의 원형 평균 (라디안 경유)
     f_rad = np.deg2rad(f)
     o_rad = np.deg2rad(o)
 
-    f_bar = np.arctan2(np.nanmean(np.sin(f_rad)), np.nanmean(np.cos(f_rad)))
-    o_bar = np.arctan2(np.nanmean(np.sin(o_rad)), np.nanmean(np.cos(o_rad)))
+    sin_f_mean = np.nanmean(np.sin(f_rad))
+    cos_f_mean = np.nanmean(np.cos(f_rad))
+    sin_o_mean = np.nanmean(np.sin(o_rad))
+    cos_o_mean = np.nanmean(np.cos(o_rad))
+
+    # 상수 배열 / 분산 0 가드 ―― arctan2 계산 전에 수행.
+    # 평균 합성 벡터 길이 R: 상수 배열이면 sin²+cos²=1 에 의해 R=1.0 이
+    # Python/NumPy 버전에 무관하게 정확하게 성립한다.
+    # R ≈ 1 이면 모든 값이 동일한 방향 → 원형 분산 0 → 상관 정의 불가 → NaN.
+    # (denominator == 0 검사만으로는 py3.9 등에서 tiny nonzero 가 될 수 있다.)
+    R_f = np.hypot(cos_f_mean, sin_f_mean)
+    R_o = np.hypot(cos_o_mean, sin_o_mean)
+    if not (R_f < 1.0 - 1e-9 and R_o < 1.0 - 1e-9):
+        return float("nan")
+
+    f_bar = np.arctan2(sin_f_mean, cos_f_mean)
+    o_bar = np.arctan2(sin_o_mean, cos_o_mean)
 
     sin_f = np.sin(f_rad - f_bar)
     sin_o = np.sin(o_rad - o_bar)
@@ -188,7 +214,8 @@ def circular_corr(
     numerator = np.nansum(sin_f * sin_o)
     denominator = np.sqrt(np.nansum(sin_f ** 2) * np.nansum(sin_o ** 2))
 
-    if denominator == 0.0:
+    # 추가 안전망: R 검사를 통과했어도 부동소수 예외 케이스 대비
+    if not (denominator > 0.0):
         return float("nan")
 
     return float(np.clip(numerator / denominator, -1.0, 1.0))

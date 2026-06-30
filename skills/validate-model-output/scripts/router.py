@@ -5,6 +5,7 @@ import re
 
 import yaml
 
+from aliases import to_standard
 from dataset import Dataset
 
 _CONFIG = os.path.join(
@@ -29,16 +30,43 @@ def _load_domains(path: str = _CONFIG) -> dict:
 
 
 def _match_var(var, domains: dict):
-    """한 변수가 어느 도메인에 맞는지 — standard_name 우선, 없으면 이름 패턴."""
+    """한 변수가 어느 도메인에 맞는지.
+
+    매칭 우선순위:
+    1. standard_name 직접 매칭
+    2. 변수명 패턴(name_patterns) 매칭
+    3. aliases.to_standard 로 표준화 후 재매칭 (한글·비표준 이름 지원, R4)
+       3a. 변환된 canonical 이름을 standard_names 에서 탐색
+       3b. 변환된 canonical 이름을 name_patterns 로 탐색
+    """
     sn = (var.standard_name or "").lower()
     name = var.name.lower()
+
+    # 1단계: standard_name 직접 매칭
     for dom, spec in domains.items():
         if sn and sn in [s.lower() for s in spec.get("standard_names", [])]:
             return dom
+
+    # 2단계: 변수명 패턴 매칭
     for dom, spec in domains.items():
         for pat in spec.get("name_patterns", []):
             if re.search(pat, name):
                 return dom
+
+    # 3단계: aliases.to_standard 표준화 후 재매칭 (한글 헤더 등)
+    resolved = to_standard(var.name)
+    if resolved:
+        resolved_lower = resolved.lower()
+        # 3a: 변환된 이름을 standard_name 으로 취급
+        for dom, spec in domains.items():
+            if resolved_lower in [s.lower() for s in spec.get("standard_names", [])]:
+                return dom
+        # 3b: 변환된 이름을 변수명으로 취급해 패턴 재검사
+        for dom, spec in domains.items():
+            for pat in spec.get("name_patterns", []):
+                if re.search(pat, resolved_lower):
+                    return dom
+
     return None
 
 
@@ -56,15 +84,22 @@ def _is_aux_var(var) -> bool:
 
 
 def _is_wave_headline(var) -> bool:
-    """파랑 대표변수 판정 — R4b (b).
+    """파랑 대표변수 판정 — R4b (b) + R4 (한글 alias 지원).
 
-    standard_name == sea_surface_wave_significant_height
-    또는 이름이 hs / hm0 포함 / swh 포함이면 True.
+    True 조건 (순서대로):
+    1. standard_name == sea_surface_wave_significant_height
+    2. 이름이 hs / hm0 포함 / swh 포함 (영문 패턴)
+    3. aliases.to_standard(이름) == 'significant_wave_height'  ← R4 추가
+       → 유의파고 등 한글·비표준 이름도 인식
     """
     sn = (var.standard_name or "").lower()
     if sn == _WAVE_HEADLINE_SN:
         return True
-    return bool(_WAVE_HEADLINE_RE.search(var.name.lower()))
+    if _WAVE_HEADLINE_RE.search(var.name.lower()):
+        return True
+    # R4: aliases.to_standard 를 통해 한글·비표준 이름 인식
+    resolved = to_standard(var.name)
+    return resolved == "significant_wave_height"
 
 
 def detect_domain(d: Dataset, domains: dict | None = None) -> dict:

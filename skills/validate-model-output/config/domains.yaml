@@ -8,6 +8,7 @@ domains:
       - air_pressure_at_mean_sea_level
       - precipitation_amount
       - relative_humidity
+      - wind_speed        # aliases.yaml canonical key (풍속)
     name_patterns:
       - "^t2m$"
       - "^2t$"
@@ -37,6 +38,9 @@ domains:
   waves:
     standard_names:
       - sea_surface_wave_significant_height
+      - significant_wave_height  # aliases.yaml canonical key (유의파고/hs/hm0/swh)
+      - wave_period              # aliases.yaml canonical key (파주기/t01/tp)
+      - wave_direction           # aliases.yaml canonical key (파향/dir/dp)
     name_patterns:
       - "^hs$"
       - "hm0"

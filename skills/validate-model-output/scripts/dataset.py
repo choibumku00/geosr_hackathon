@@ -122,15 +122,33 @@ class Dataset:
     def latlon(self) -> Optional[tuple]:
         """정규 격자의 lat/lon 좌표 변수를 탐색한다.
 
-        coords에 등록된 변수만 대상으로 하므로,
-        mesh 데이터의 data variable lat/lon은 반환하지 않는다.
+        탐색 순서:
+        1. coords 에 등록된 1D/2D 좌표 변수를 우선 탐색한다.
+        2. coords 에 없으면 data_vars 에서 2D(동일 형상) lat/lon 을 탐색한다.
+           data_vars 의 1D lat/lon 은 mesh 취급 → is_mesh() 에서 별도 처리.
+
+        Returns (lat_name, lon_name, is_2d) or None.
         """
+        # --- 1) coords 우선 탐색 ---
         lat = self._find_in_coords(_LAT_NAMES)
         lon = self._find_in_coords(_LON_NAMES)
-        if lat is None or lon is None:
-            return None
-        is_2d = self._ds[lat].ndim == 2
-        return (lat, lon, is_2d)
+        if lat is not None and lon is not None:
+            is_2d = self._ds[lat].ndim == 2
+            return (lat, lon, is_2d)
+
+        # --- 2) data_vars 에서 2D 정규 격자 lat/lon 탐색 ---
+        # mesh(1D data_var lat/lon, 동일 단일차원)와 구분하기 위해
+        # 두 변수 모두 2D 이고 동일 형상일 때만 정규 2D 격자로 인식한다.
+        lat_dv = self._find_data_var(_LAT_NAMES)
+        lon_dv = self._find_data_var(_LON_NAMES)
+        if lat_dv is not None and lon_dv is not None:
+            lat_da = self._ds[lat_dv]
+            lon_da = self._ds[lon_dv]
+            if (lat_da.ndim == 2 and lon_da.ndim == 2
+                    and lat_da.shape == lon_da.shape):
+                return (lat_dv, lon_dv, True)
+
+        return None
 
     def is_mesh(self) -> bool:
         """비정형 mesh 여부를 반환한다.

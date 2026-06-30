@@ -73,6 +73,24 @@ CSV cp949 읽기는 `pd.read_csv(path, encoding='cp949')`; 컬럼명은 한글 a
 | 분석 도메인이 파랑·기상·해양온도·해류·해수면 중 어느 것인가? | 카탈로그(`project/research/07~11`) 매핑 |
 | 관심 변수·기간·해역은? | 분석 범위 결정 |
 | 기준자료(ERA5·관측 CSV·위성 고도계 등)를 보유 중인가? | 보유 시 다축 검증, 미보유 시 단독 QC+내부통계 |
+| 시간축 시간대(TZ)는? (**★**) | CF `units` ("hours since … UTC") 로 확인. CSV엔 보통 TZ 표기 없음. 모호하면 사용자에 질문. 부이(KST 흔함) vs 모델(UTC)이면 → 아래 ★시간대 처리 참조. |
+| 점관측 CSV에 위경도(lat/lon) 컬럼이 있는가? (**★ R3-b**) | 없으면 폴더에서 좌표 파일(points.list 등) 탐색 또는 사용자에 질문 → 아래 ★점관측 좌표 참조. |
+
+> **★ 시간대(TZ) 확인 절차**
+> 1. NetCDF: CF `time` 변수의 `units` 속성 ("hours since 1900-01-01 00:00:00 UTC") 우선 확인.
+> 2. CSV: 보통 TZ 표기 없음 → 컬럼이나 헤더에 표기가 있으면 읽고, 없으면 사용자에 질문.
+> 3. 부이(KST 흔함) vs 모델(UTC) 불일치 시 **매칭 전** `preprocess.tz_to_utc(times, tz='KST')` 로 UTC 정규화.
+> 4. TZ 미확인 시: UTC 가정하고 진행 (`assumed=True` 플래그 반환) + 리포트 경고:
+>    "TZ 미확인=UTC가정; 부이 KST vs 모델 UTC면 9h 어긋남 위험".
+
+> **★ 점관측 좌표 출처 (R3-b)**
+> 점관측 CSV에 lat/lon 없으면:
+> 1. 같은 폴더·상위 폴더에서 좌표 파일(points.list, stations.csv, station_info.xlsx 등) 탐색.
+> 2. 없으면 사용자에 질문.
+> 3. 형식을 실시간으로 파악해 `{정점ID: (lat, lon)}` 매핑 생성.
+> 4. `preprocess.inject_point_coords(station_ids, mapping)` 으로 주입.
+>
+> **코어 자동 경로에 points.list 전용 파서를 박지 말 것** — `preprocess.parse_points_list(path)` 는 에이전트/CLI가 명시 호출할 때만 사용.
 
 **카탈로그 근거**: `project/research/01~15` (지표 메서드) + `project/research/figures/16~22` (그림 유형).
 기준자료를 보유하지 않은 경우 가능한 분석(QC·내부통계·도메인 분포 진단)을 먼저 제안하고,
@@ -219,11 +237,61 @@ plt.savefig("hs_validation_3axis.png", dpi=120)
 ```
 
 **이 코드는 SAMPLE이다.** 실데이터에서는:
-- 부이 좌표가 별도 파일에 있을 수 있다 → 조인 방법 조정
+- 부이 좌표가 별도 파일에 있을 수 있다 → 아래 ★점관측 좌표(2-E) 참조
 - 모델 변수명·부이 컬럼명이 다를 수 있다 → alias 매핑 조정
 - mesh 위상(node/element dim 이름)이 다를 수 있다 → `d.data_var_names()` 후 적응
 - 시간 해상도·형식이 다를 수 있다 → `pd.to_datetime` 파싱 방법 조정
+- 부이 시간대가 KST일 수 있다 → 아래 ★시간대(2-E) 참조
 - 파향이 meteorological/oceanographic 규약 중 어느 쪽인지 확인 → wrap 방향 조정
+
+---
+
+### 2-E. ★ 시간대 정규화 & 점관측 좌표 주입
+
+#### ① 시간대(TZ) 정규화
+
+CF time units로 TZ를 확인한다. CSV는 표기가 없는 경우가 많으므로 사용자에게 확인하거나
+컬럼 표기(예: "2024-01-01 09:00+09:00")에서 파악한다.
+
+```python
+# SAMPLE — 실데이터 TZ 확인 후 tz 인자 조정
+import sys; sys.path.insert(0, "scripts")
+from preprocess import tz_to_utc
+
+# NetCDF 시간은 보통 CF UTC — d.xr["time"].attrs["units"] 로 확인
+# 부이 CSV가 KST(UTC+9)인 경우 아래처럼 정규화
+times_buoy_utc, assumed = tz_to_utc(df["time"].values, tz="KST")
+# tz=None이면 UTC 가정, assumed=True 반환
+if assumed:
+    import warnings
+    warnings.warn(
+        "TZ 미확인=UTC가정; 부이 KST vs 모델 UTC면 9h 어긋남 위험",
+        stacklevel=2,
+    )
+# 리포트 캡션에도 동일 경고 삽입: "관측 시간 TZ 미확인 — UTC 가정, KST면 9h 편이 발생"
+```
+
+#### ② 점관측 좌표 주입 (R3-b)
+
+점관측 CSV에 lat/lon 컬럼이 없으면 좌표 파일을 별도로 탐색하거나 사용자에게 받는다.
+형식은 실데이터마다 다르므로 에이전트가 실시간으로 파악해 매핑을 생성한다.
+
+```python
+# SAMPLE — 형식에 맞게 파싱 방법 조정 (하드코딩 금지)
+from preprocess import inject_point_coords
+# 예: TSV, CSV, YAML, JSON 어떤 형식이든 실시간 파악 후 매핑 생성
+mapping = {
+    "부산_앞바다": (35.12, 129.04),
+    "제주_성산":   (33.46, 126.93),
+}
+# preprocess.parse_points_list(path) — 에이전트/CLI가 명시 호출, 코어 자동경로 금지
+# 좌표 주입
+lats, lons = inject_point_coords(df["station"].values, mapping)
+# 이후 cKDTree 매칭에 lats/lons 사용
+```
+
+**코어에 points.list 전용 파서를 자동 경로로 박지 말 것.**
+`preprocess.parse_points_list(path)` 는 에이전트나 CLI 스크립트가 필요 시 명시적으로 호출하는 도우미 함수다.
 
 ---
 
