@@ -27,13 +27,14 @@ M3(+일부 M4) 푸시 후 재검증. 스킬 테스트 **241 passed / 1 failed**.
 - ✅ **R1 인코딩 해결**: 부이 cp949 CSV가 **열림**(컬럼 인식). 
 - ✅ **R2 해결**: WW3가 `coord_kind=mesh`·domain=`waves`·role=output로 정확 분류.
 - ✅ **신규 기능**: `verify` 서브커맨드 + `preprocess`·metrics(basic/pattern/distribution/circular)·`plots`·recipe 문서.
-- 🚩 **신규 블로커(R3-b) — 파랑 데모 #1 막힘**: 실제 부이 CSV(`OBS_BUOY_TIM`)·번들 fixture 모두 **lat/lon 컬럼이 없다**. 좌표는 **`points.list`에 정점ID(`지점`)로 분리**돼 있음. 현재 `verify`(SAMPLE)는 "obs에 lat/lon 있음"을 가정 → 매칭 실패("lat/lon 못 찾음").
-  - **필요**: `preprocess`/`verify`가 **정점ID→좌표 조인**(`points.list` 또는 `--points` 인자)으로 부이 위치를 얻어 mesh 최근접 매칭. (R3의 실데이터 형태 반영)
+- ⚙️ **R3-b — 점관측 좌표 출처는 "에이전트가 파악"할 것 (코어에 하드코딩 금지)**: 실 부이 CSV(`OBS_BUOY_TIM`)·번들 fixture 모두 **lat/lon 컬럼이 없고**, 좌표는 **`points.list`에 정점ID(`지점`)로 분리**돼 있음. 단, `points.list`는 **자료마다 형식·이름·유무가 다르므로 코어에 박으면 안 됨**(하드코딩 금지 원칙). verify의 "실데이터 헤더 확인하고 적응하라" 메시지가 **설계대로의 신호**.
+  - **에이전트(SKILL.md PHASE1)**: "점관측에 좌표 없음 → 폴더에서 좌표 출처(별도 points/메타 파일) 탐색하거나 사용자에 질문 → 형식 실시간 파악해 조인" 단계 명문화.
+  - **코어(preprocess)**: `points.list` 전용 파서가 아니라 **범용 좌표 주입구**(`{정점ID:(lat,lon)}` 매핑/`--points`는 형식불문, 에이전트가 파싱해 전달). 코어는 "좌표 주어지면 mesh 최근접 매칭"만 책임.
 - ⚠️ **R4 잔여**: 부이 도메인이 `meteorology`로 잡힘(부이에 풍속·기압·기온 등 기상컬럼이 파랑컬럼보다 많아 투표 우세). 파랑 매칭 의도와 어긋날 수 있음 → **유의파고(headline) 가중** 또는 사용자 확정으로 보완.
 - ⚠️ **GFS 회귀 의심**: GFS `coord_kind`가 이전 `2d`→현재 `none`. mesh 리팩터 영향 가능 → 2D 좌표(lat/lon as 2D data_vars) 인식 점검 필요.
 - ⚠️ **단위테스트 1건 실패**: `test_metrics_circular::test_constant_array_nan`(상수배열 원형상관 NaN 처리).
 
-→ **요지**: R1·R2는 끝. 파랑 데모를 끝내려면 **정점ID→좌표 조인(R3-b)** 이 M4의 다음 과제. GFS 회귀·circular 테스트는 사소하나 기록.
+→ **요지**: R1·R2는 끝. 파랑 데모는 **에이전트가 좌표 출처를 파악·조인**(R3-b, 코어엔 범용 주입구만)하면 완성 — points.list 하드코딩 금지. GFS 회귀·circular 테스트는 사소하나 기록.
 
 ---
 
