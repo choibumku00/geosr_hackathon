@@ -17,6 +17,22 @@ def test_build_report_structure():
     assert r["source"] == "x.nc"
     assert r["summary"]["FAIL"] == 1
     assert len(r["checks"]) == 2
+    assert r["ok"] is False
+
+
+def test_render_none_variable_dash():
+    qc = {"checks": [{"check": "schema", "variable": None, "status": "PASS", "evidence": "ok"}],
+          "summary": {"PASS": 1, "FAIL": 0, "WARN": 0}, "ok": True}
+    md = render_markdown(qc, source="x.nc")
+    assert "| - |" in md   # 변수 없는 행은 '-'
+
+
+def test_render_escapes_pipe_in_evidence():
+    qc = {"checks": [{"check": "value_range", "variable": "t2m", "status": "FAIL", "evidence": "범위 0|1 벗어남"}],
+          "summary": {"PASS": 0, "FAIL": 1, "WARN": 0}, "ok": False}
+    md = render_markdown(qc, source="x.nc")
+    assert "0\\|1" in md          # 파이프가 이스케이프됨
+    assert "0|1 벗어남" not in md  # 원본 비이스케이프 형태는 없어야
 
 
 def test_render_markdown_contains_evidence_and_advisory():
