@@ -1,1 +1,5 @@
 submit/
+
+# 대용량 샘플 NetCDF (GitHub 100MB 제한 초과 — 로컬에만 보관)
+project/sample_data/**/*.nc
+project/sample_data/*.nc
