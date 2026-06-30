@@ -134,12 +134,14 @@ function card(s, x, y, w, h, fill) {
 {
   const s = p.addSlide();
   header(s, "라이브 데모 ①", "발견(discover) + QC 결함적발");
-  imgBox(s, 0.85, 1.95, 5.7, 3.5, "discover project/data/ → 멀티포맷·도메인 자동 분류 인벤토리 표");
-  imgBox(s, 6.9, 1.95, 5.55, 3.5, "validate 정상본=PASS 12/12  vs  결함본=FAIL(500K·격자) 리포트");
+  s.addImage({ path: "project/presentation/assets/discover_table.png", x: 0.6, y: 2.0, w: 6.05, h: 2.11 });
+  s.addImage({ path: "project/presentation/assets/qc_panel.png", x: 6.95, y: 2.06, w: 5.75, h: 2.0 });
+  s.addText("① discover — 멀티포맷·도메인 자동 분류", { x: 0.6, y: 4.18, w: 6.05, h: 0.3, fontFace: KF, fontSize: 11, color: MUTE, align: "center" });
+  s.addText("② validate — 정상 PASS / 결함 FAIL 근거 적발", { x: 6.95, y: 4.18, w: 5.75, h: 0.3, fontFace: KF, fontSize: 11, color: MUTE, align: "center" });
   s.addText([
     { text: "사용자가 설명 안 해도 ‘무엇이 모델/기준’인지 먼저 파악", options: { bullet: true, breakLine: true } },
-    { text: "정상은 통과, 일부러 망가뜨린 파일은 근거와 함께 적발 — 검증을 ‘진짜’ 한다 (실측 완료)", options: { bullet: true } },
-  ], { x: 0.9, y: 5.65, w: 11.6, h: 0.9, fontFace: KF, fontSize: 13, color: INK, paraSpaceAfter: 4 });
+    { text: "정상은 통과, 망가뜨린 파일은 근거와 함께 적발 — 실측 완료", options: { bullet: true } },
+  ], { x: 0.9, y: 4.7, w: 11.6, h: 0.9, fontFace: KF, fontSize: 13, color: INK, paraSpaceAfter: 4 });
   footer(s, 5);
 }
 
@@ -147,13 +149,9 @@ function card(s, x, y, w, h, fill) {
 {
   const s = p.addSlide();
   header(s, "라이브 데모 ②", "파랑 검증 — WW3 모델 vs 부이 관측");
-  imgBox(s, 0.85, 1.95, 3.75, 3.4, "Hs 산점도 + SI/회귀");
-  imgBox(s, 4.78, 1.95, 3.75, 3.4, "파향 wave rose");
-  imgBox(s, 8.7, 1.95, 3.75, 3.4, "2024-09-15 고파 피크 시계열 (부이 vs WW3)");
-  s.addText([
-    { text: "부이 지점에 모델 최근접 매칭 → 정확도(SI·RMSE)·분포·방향·이벤트·해역별 다축", options: { bullet: true, breakLine: true } },
-    { text: "리포트에 ‘부이=점관측·기준자료≠참값’ 경고 자동", options: { bullet: true } },
-  ], { x: 0.9, y: 5.6, w: 11.6, h: 0.9, fontFace: KF, fontSize: 13, color: INK, paraSpaceAfter: 4 });
+  s.addImage({ path: "project/presentation/assets/wave_validation.png", x: 1.27, y: 1.88, w: 10.8, h: 3.6 });
+  s.addText("WW3 vs 부이 · 2024-09-15 · N=393 · 17지점   —   bias −0.12 m · SI 0.43 · R 0.74", { x: 0.9, y: 5.52, w: 11.6, h: 0.32, fontFace: KF, fontSize: 12.5, color: DEEP, align: "center", bold: true });
+  s.addText("부이 지점 최근접 매칭 → 정확도·분포·시계열 다축 · 09-15 피크에서 모델 과소(스킬이 좌표 출처를 자동 발견)", { x: 0.9, y: 5.95, w: 11.6, h: 0.5, fontFace: KF, fontSize: 12, color: INK, align: "center" });
   footer(s, 6);
 }
 
