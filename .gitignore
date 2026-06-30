@@ -5,3 +5,13 @@ project/data/
 project/*.pdf
 __pycache__/
 *.pyc
+
+# 큰 NetCDF/GRIB 원본은 커밋 금지 (실수 방지)
+*.nc
+*.nc4
+*.grib
+*.grib2
+*.grb
+# 단, 스킬의 소형 테스트 fixture는 재현성 위해 예외로 포함
+!skills/**/data/*.nc
+!skills/**/tests/**/*.nc
