@@ -10,7 +10,7 @@
 이 스펙은 다음 세 갈래를 **하나의 구현 가능한 설계**로 통합한다.
 
 1. 팀원(오유정) 설계 `2026-06-30-validate-model-output-design.md` — 결정적 Python 코어 + `rules.yaml` + QC/예보검증 2층위 + ERA5/GFS 데모.
-2. `project/research/` 검증·분석 방법 카탈로그(15파일·방법카드 ~500개) + 색인 `00_overview_taxonomy.md`(도메인→recipe 라우팅 C절, 횡단 중복방지 D절, 함정 §G).
+2. `project/research/` 검증·분석 방법 카탈로그(15파일·방법카드 ~500개) + 색인 `00_overview_taxonomy.md`(도메인→recipe 라우팅 C절, 횡단 중복방지 D절, 함정 §G) **+ 시각화(그림) 레퍼런스 카탈로그 `project/research/figures/16~22`(그림카드 ~115개, 각 메서드카드와 짝 + 그림별 "만드는 법" 실존 Python 도구 명시)**.
 3. `project/research/REVIEW.md`(Codex 검토) — "추가 조사 말고 코드 친화적으로 압축: 정규화→canonical metric→router/recipe→MVP범위→scaffold".
 
 추가 합의된 방향(이 세션):
@@ -70,6 +70,8 @@ skills/validate-model-output/
       events.py             # 임계초과 POD/FAR/CSI·극값(POT/return)  [도메인·트리거 호출]
       circular.py           # 풍향/유향 원형통계(원형 평균오차·원형상관, ±180° 규약)
       vector.py             # u/v 벡터 RMSE·벡터상관 (바람/해류)
+    plots.py                # 표준 그림 렌더링(산점·밀도·QQ·오차히스토·Taylor·target·bias/ACC 지도·시계열 등)
+                            #   — figures 카탈로그(16~22)의 "만드는 법"을 구현, 캡션에 §G 3원칙 강제
     report.py               # report.json + report.md (PASS/FAIL/WARN·메트릭·그림 링크 + 근거)
   config/
     rules.yaml              # 층위1: 변수별 물리범위·결측임계·필수속성 (유연매칭)
@@ -131,15 +133,17 @@ skills/validate-model-output/
 
 (도메인 × 기준자료종류 × 가능한축)마다 **서로 보완되는 분석을 폭넓게** 돌리고, 축별 섹션으로 전부 제시 → 사용자 선택. 못 돌린 축은 "이런 데이터 있으면 가능"으로 리포트.
 
-| 분석 축 | 분석(예) | metrics 모듈 | 카탈로그 출처 |
-|---|---|---|---|
-| 정확도·오차 | bias·MAE·RMSE·nRMSE·SI·r·R² | `basic.py` | `01` |
-| 패턴·구조 | 패턴상관/ACC·Taylor·target·차이/편향/RMSE 지도·RAPSD/유효해상도 | `pattern.py`,`spatial.py` | `02`,`14` |
-| 분포·꼬리 | 히스토그램/PDF·QQ·Perkins SS·KS·분위수·임계초과·극값 | `distribution.py`,`events.py` | `01`,`03` |
-| 위상·시간 | 영역평균 시계열·아노말리·lag상관·추세 (시간축>1) | `timeseries.py` | `06` |
-| 벡터·방향 | u/v 벡터RMSE·벡터상관·풍향/유향 원형통계 | `vector.py`,`circular.py` | `07`,`10` |
-| 물리·파생 | 풍속 √(u²+v²) 파생 후 비교, (요청시) 보존·플럭스 | `derive.py`,(`04` 후속) | `07`,`04` |
-| 공간 crop·해역별 | bbox·명명해역(동해/남해/북태평양/열대…) 잘라 해역별 배터리 | `regions.py` | `15`,`09` |
+| 분석 축 | 분석(예) | metrics 모듈 | 그림 (figures 카탈로그) | 출처 |
+|---|---|---|---|---|
+| 정확도·오차 | bias·MAE·RMSE·nRMSE·SI·r·R² | `basic.py` | 산점도·밀도산점도·오차히스토그램 (`16`A) | `01` |
+| 패턴·구조 | 패턴상관/ACC·Taylor·target·차이/편향/RMSE 지도·RAPSD/유효해상도 | `pattern.py`,`spatial.py` | Taylor·target·bias/difference map·ACC map·FSS·RAPSD (`16`A·B·D) | `02`,`14` |
+| 분포·꼬리 | 히스토그램/PDF·QQ·Perkins SS·KS·분위수·임계초과·극값 | `distribution.py`,`events.py` | QQ-plot·PDF/CDF/Perkins·return-level·Performance/ROC/reliability (`16`A·C) | `01`,`03` |
+| 위상·시간 | 영역평균 시계열·아노말리·lag상관·추세 (시간축>1) | `timeseries.py` | 시계열 overlay+잔차·lag·STL·Hovmöller (`16`B·E) | `06` |
+| 벡터·방향 | u/v 벡터RMSE·벡터상관·풍향/유향 원형통계 | `vector.py`,`circular.py` | 바람 벡터·wind rose (`17`) / quiver·current rose (`20`) | `07`,`10` |
+| 물리·파생 | 풍속 √(u²+v²) 파생 후 비교, (요청시) 보존·플럭스 | `derive.py`,(`04` 후속) | (위 그림 재사용) + 파생장 지도 | `07`,`04` |
+| 공간 crop·해역별 | bbox·명명해역(동해/남해/북태평양/열대…) 잘라 해역별 배터리 | `regions.py` | 해역별 bias/RMSE 지도·(수온)단면·T–S diagram (`19`) | `15`,`09` |
+
+> **그림 구현**: 각 figure 카드의 "만드는 법"(실존 Python 도구: `matplotlib`·`scipy`·`numpy`·`skimage`; 지도 coastline은 `cartopy` *optional*, 미설치 시 `matplotlib` pcolormesh로 대체)을 `plots.py`에 옮긴다. **모든 캡션에 §G 3원칙 강제**: ① 기준자료≠참값(reference) "모델−기준"으로 표기 ② 해석선(SI<0.15·ACC≥0.6 등)은 advisory 참고선 ③ 단일 그림 결론 금지(정확도+편향+패턴/분포 동반). figures `16` §G 요약표(그림→검증목적→짝지표→01–15)가 plots↔metrics 연결의 색인.
 
 **메커니즘**
 1. **feasibility 자동판정**: 시간축 스텝수·앙상블축·기준자료종류·변수성질을 보고 **돌릴 수 있는 축만** 실행. 못 돌린 축은 필요한 데이터와 함께 리포트(↔PHASE1 갭분석).
@@ -170,7 +174,8 @@ skills/validate-model-output/
 | `derive` | 파생변수 | Dataset → 파생장(풍속 등) | dataset, numpy |
 | `metrics/*` | canonical 지표 | 배열쌍 → 수치 | numpy/scipy |
 | `regions` | 해역 crop·반복 | Dataset+영역 → 해역별 결과 | preprocess |
-| `report` | 리포트 | 결과 → json+md+png | matplotlib |
+| `plots` | 표준 그림 렌더 | 배열/결과 → png | matplotlib, (cartopy opt.) |
+| `report` | 리포트 | 결과+그림 → json+md | plots |
 
 각 모듈은 한 가지 책임, `Dataset`/결과 dict라는 명확한 인터페이스로 통신 → 독립 테스트 가능.
 
@@ -178,6 +183,7 @@ skills/validate-model-output/
 
 - `report.json`: 모든 체크·메트릭·가정·그림경로의 기계가독 구조.
 - `report.md`: 심사위원/사람용. 섹션 = (요약 PASS/FAIL/WARN) → (층위1 QC 표) → (층위2 축별 분석: 정확도/패턴/분포/공간/해역/벡터…) → (그림) → (가정·advisory·미수행 분석과 필요 데이터).
+- **그림 삽입**: 각 축별로 `plots.py`가 렌더한 figure(산점·QQ·Taylor·target·bias/ACC 지도·시계열·해역별 지도)를 `report.md`에 임베드. 캡션은 figures 카탈로그 "읽는 법" + §G 3원칙(reference≠truth·advisory·단일그림 금지)을 따른다.
 - 각 항목에 **근거**(예: "t2m 12개 값 > 340K, index …", "lat 비단조 @ i=…", "남해 영역 bias=+0.8K, RMSE=1.2K").
 
 ## 11. 에러 처리
@@ -197,7 +203,7 @@ skills/validate-model-output/
 ## 13. 데이터·환경 전제
 
 - 보유: `project/sample_data/nums_ex/era5_rean_glo_day_20220906.nc`(NetCDF3 64-bit offset, 598MB, K·CF명·1D좌표), `gfs_fcst_glo_day_masked_20220906.nc`(NetCDF4/HDF5, 1.14GB, GRIB→NetCDF변환·masked, °C·2D좌표 추정). 둘 다 전역 721×1440, 단일일.
-- 환경: Python 3.12(miniconda3). numpy·pandas·matplotlib·scipy 설치됨; `xarray netCDF4 h5netcdf PyYAML pytest`는 pip 설치(연결·캐시 확인됨).
+- 환경: Python 3.12(miniconda3). numpy·pandas·matplotlib·scipy 설치됨; `xarray netCDF4 h5netcdf PyYAML pytest`는 pip 설치(연결·캐시 확인됨). 지도 coastline용 `cartopy`는 **optional**(Windows 설치 부담 → 미설치 시 `matplotlib` pcolormesh로 자동 대체).
 
 ## 14. 데모 시나리오 (시간 유연 — 넘어도 무방)
 
