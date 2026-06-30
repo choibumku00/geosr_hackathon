@@ -1,1 +1,7 @@
 submit/
+.venv/
+.DS_Store
+project/data/
+project/*.pdf
+__pycache__/
+*.pyc
