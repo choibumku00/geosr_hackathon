@@ -1,33 +1,141 @@
-# 예보사업부 AI·AX 해커톤 — 스타터 킷
+# validate-model-output
 
-2026.6.30(화)~7.1(수) · 엘리스랩 부산센터 · 예보사업부 9개 팀
-
-이 저장소를 받아서 **그 폴더에서 바로 작업**하면, 표준 헤더가 자동 로드되고 작업 기록이 `submit/` 폴더에 자동으로 쌓입니다. 마지막에 폴더째 압축해 제출하면 끝.
+수치모델·AI 출력(NetCDF3/4·CSV)을 ERA5·GLORYS·관측·위성과 비교·검증·다축분석하는 범용 재사용 스킬 — 포맷·규약(K/°C·1D/2D/mesh·영문/한글 cp949)을 가리지 않는다.
 
 ---
 
-## 받는 법 (둘 중 하나)
+## 무엇을 푸나
 
-**A. git으로 (권장 — 팀 협업에 유리)**
-```bash
-git clone https://github.com/limitda83/geosr-hackathon-kit.git
-cd geosr-hackathon-kit
+수치모델·AI 결과물을 검증·후처리할 때마다 반복되는 문제:
+
+- **매번 손으로**: 파일 열기·변수 확인·단위 환산·비교 플롯을 검증자가 직접 코딩
+- **포맷·규약 제각각**: NetCDF 비정형 mesh / CSV cp949 한글 헤더 / KST vs UTC 시간대 불일치
+- **비일관·재현 불가**: 검증자마다 다른 지표·임계를 쓰고, 6개월 뒤 재현이 안 됨
+
+이 스킬은 에이전트가 실시간으로 파일 구조를 파악·적응하고, 도메인 맞춤 다축 분석을 수행하며, 재현 가능한 보고서(JSON + Markdown)를 자동 생성한다.
+
+---
+
+## 핵심 차별점
+
+| 특징 | 내용 |
+|------|------|
+| **결정적 코어 + live-adaptive 에이전트** | `scripts/` + `config/*.yaml`은 구조 파악과 적응의 출발점(SAMPLE). 실데이터에서 구조가 다르면 에이전트가 즉석 throwaway 코드로 파악하고 맞춤 코드로 적응 |
+| **재현성 100%** | 같은 입력 → 보고서 바이트 동일. 합성 fixture로 hermetic(원본 데이터 불의존) |
+| **다축 분석(최소 3축)** | 정확도·분포·시간·방향·종합·해역. 단일 지표 결론 금지 |
+| **전파성** | `config/domains.yaml`에 줄 추가하면 새 도메인·변수 확장. SKILL.md를 로드하면 어느 에이전트에서도 동작 |
+| **§G 함정 강제** | 기준자료 ≠ 진실·해석임계 advisory·동화 산물 독립관측 취급 금지를 보고서에 자동 경고 |
+
+---
+
+## 4페이즈 흐름
+
+```
+DISCOVER  →  ELICIT  →  ANALYZE  →  REPORT
+  파악         질문       도메인       JSON
+(포맷·구조)  (역할·범위)  맞춤 다축    + Markdown
 ```
 
-**B. 다운로드 (git 몰라도 됨)**
-- 이 페이지 위쪽 녹색 **`Code` ▾ → `Download ZIP`** → 압축 풀기.
+1. **DISCOVER** — 폴더/파일을 스캔해 포맷·도메인·좌표·역할을 추정하고 `inventory.json` 생성. 미지 구조·열기 실패 시 즉석 throwaway 코드로 실시간 점검.
+2. **ELICIT** — 인벤토리를 제시한 뒤 모델/기준자료 역할·도메인·관심 변수·시간대(TZ)·위경도 출처를 사용자에게 확인. 즉시 분석 진행 금지.
+3. **ANALYZE** — 도메인별 다축 배터리 실행: 정확도(bias/RMSE/SI/r) · 분포(QQ/Perkins/KS) · 시간(overlay/lag) · 방향(원형통계) · 종합(Taylor/target) · 해역(crop).
+4. **REPORT** — JSON + Markdown 보고서 생성. §G 함정(기준자료 한계·단일지표 금지)을 모든 보고서에 삽입.
 
 ---
 
-## 쓰는 법 (3단계)
+## 빠른 시작
 
-1. **이 폴더를 도구로 연다.**
-   - Claude Code: 이 폴더에서 `claude` 실행 → `CLAUDE.md` 자동 로드
-   - Codex: 이 폴더에서 실행 → `AGENTS.md` 자동 로드
-   - Cursor: 이 폴더 열기 → `.cursorrules` 자동 로드
-   - ChatGPT 등 챗형: `CLAUDE.md` 내용을 대화 맨 처음에 붙여넣기
-2. **그냥 작업한다.** 에이전트가 시작할 때 팀명·팀원·주제·기존 방식(Before)을 먼저 물어보고, 작업하며 `submit/`에 기록을 자동으로 쌓아 준다.
-3. **제출한다.** 마감(Day1 21:30~22:00) 전에 `submit/CHECKLIST.md`로 점검(에이전트에게 "제출 점검해줘") → **폴더 전체를 압축(zip)** 해 운영자에게 제출.
+```bash
+# 의존성 설치 (skills/validate-model-output/ 에서)
+pip install -r requirements.txt
+
+# 1. 파일/폴더 발견 — 포맷·도메인·좌표·역할 추정
+python scripts/cli.py discover <폴더 또는 파일...>
+
+# 2. 단일 파일 구조 상세 점검
+python scripts/cli.py inspect <파일.nc>
+
+# 3. 모델 출력 vs 기준자료 다축 검증 (에이전트 주도)
+python scripts/cli.py validate <model_file> <reference_file>
+
+# 4. 인수 검증 (5개 시나리오 자동 실행)
+python scripts/run_acceptance.py
+```
+
+> 모든 명령은 `skills/validate-model-output/` 디렉터리를 기준으로 실행한다.
+
+---
+
+## 아키텍처 — 모듈맵
+
+```
+scripts/
+├── cli.py            진입점 (discover / inspect / validate / verify 서브커맨드)
+├── dataset.py        포맷 무관 Dataset 래퍼 (open_nc, 1D/2D/mesh 지원)
+├── io_detect.py      포맷 감지 + CSV 인코딩 폴백 (utf-8 → cp949)
+├── router.py         도메인 판별 (alias + headline, config/domains.yaml 기반)
+├── discover.py       파일 인벤토리 생성 (inventory.json)
+├── inspect_file.py   단일 파일 구조 상세 출력
+├── preprocess.py     tz_to_utc · 단위 정규화 · mesh→점 matchup · 좌표 범용주입
+├── aliases.py        한글 헤더 → 영문 변수명 매핑 (config/aliases.yaml)
+├── rules.py          층위1 QC 규칙 로더 (config/rules.yaml)
+├── qc.py             층위1 QC 실행 (물리범위·결측률 advisory)
+├── report.py         JSON + Markdown 보고서 렌더러 (§G 함정 삽입)
+├── metrics_basic.py  bias / RMSE / SI / r
+├── metrics_circular.py  원형통계 (방향·파향)
+├── metrics_distribution.py  QQ / Perkins / KS
+├── metrics_pattern.py  공간 패턴 지수
+├── plots.py          scatter / QQ / Taylor / rose / diff 플롯
+├── regions.py        해역 crop (bounding box)
+├── derive.py         파생 변수 (풍속 = sqrt(u²+v²) 등)
+└── run_acceptance.py 인수 검증 5개 시나리오 자동 실행
+
+config/
+├── rules.yaml        층위1 QC 물리범위 규칙 (변수·단위별, advisory)
+├── aliases.yaml      한글/약어 헤더 → 표준 영문 변수명
+└── domains.yaml      도메인 정의 (GFS 패턴 등, 줄 추가로 확장)
+```
+
+---
+
+## 도메인 지원
+
+| 도메인 | 모델 예시 | 기준자료 | 특이사항 |
+|--------|-----------|---------|---------|
+| **기상** | GFS(격자) | ERA5(격자 대 격자) | 단위 K/°C 자동 판별, MSLP Pa/hPa |
+| **파랑** | WW3(비정형 mesh) | 부이 CSV(점관측, cp949) | mesh→점 최근접 matchup, 파향 원형통계 |
+| **확장** | yaml 1줄 추가 | 해양온도·해류·해수면 등 | `config/domains.yaml` 편집만으로 신규 도메인 등록 |
+
+시간대: 모델은 보통 UTC, 부이 CSV는 KST인 경우 흔함. `preprocess.tz_to_utc`가 파라미터화하며, 에이전트가 CF `units` 확인 후 불일치 시 경고.
+
+---
+
+## 품질
+
+| 항목 | 결과 |
+|------|------|
+| pytest | **421 passed / 0 warnings** |
+| 인수 테스트 (`run_acceptance`) | **5/5 PASS** |
+| 재현성 | **100%** — 같은 입력 → 보고서 바이트 동일 |
+| 테스트 hermetic | 합성 fixture 사용, 미공개 원본 데이터 불의존 |
+
+---
+
+## 분석 방법 카탈로그
+
+`project/research/` 에 15개 분야별 검증·분석 방법 카탈로그가 있다(~500 방법 카드, ~115 그림 카드).
+
+```
+project/research/
+├── 00_overview_taxonomy.md     전체 분류 체계
+├── 01_error_statistics.md      오차 통계 (bias/RMSE/SI/r)
+├── 02_spatial_pattern_verification.md
+├── 07_domain_meteorology.md    기상 도메인
+├── 08_domain_waves.md          파랑 도메인
+├── 09_domain_ocean_temp_salinity.md
+...
+└── 15_preprocessing_regridding_colocation.md
+```
 
 ---
 
@@ -35,48 +143,44 @@ cd geosr-hackathon-kit
 
 ```
 geosr-hackathon-kit/
-├─ START.md                              시작 안내
-├─ CLAUDE.md / AGENTS.md / .cursorrules  도구별 자동 로드(내용 동일 = 표준 헤더)
-└─ submit/                               제출물 (여기를 채워 폴더째 제출)
-   ├─ CHECKLIST.md     제출 점검표
-   ├─ PROCESS_LOG.md   작업 기록(과정 70점 근거) + 효과 측정
-   ├─ BEFORE_AFTER.md  수작업 → 에이전트화 비교(효과)
-   ├─ assets/          재사용 자산(프롬프트/스킬/CLAUDE.md 사본)
-   └─ evidence/        증빙(자동 timestamps / 세션 export는 선택)
+├── README.md                      이 파일
+├── CLAUDE.md / AGENTS.md          에이전트 자동 로드 헤더
+├── skills/
+│   └── validate-model-output/
+│       ├── SKILL.md               스킬 진입점 (에이전트 로드)
+│       ├── scripts/               23개 Python 모듈
+│       ├── config/                rules.yaml · aliases.yaml · domains.yaml
+│       ├── tests/                 pytest 테스트 + 합성 fixture
+│       ├── data/                  합성 fixture NC/CSV
+│       └── requirements.txt
+├── project/
+│   ├── research/                  분석 방법 카탈로그 (15개 md)
+│   ├── scenario/                  데모 시나리오
+│   └── sample_data/               샘플 데이터
+└── submit/                        제출물 폴더
+    ├── PROCESS_LOG.md
+    ├── BEFORE_AFTER.md
+    ├── assets/
+    └── evidence/
 ```
 
 ---
 
-## 팀 협업 (3~4명이 한 주제를)
+## 팀
 
-- **공통과제 = 팀 1주제.** 회의로 정한 그 주제를 **파트로 나눠** 각자 맡는다(예: 데이터 전처리 / 분석 프롬프트 / 결과·보고 자동화).
-- **각자 본인 계정·본인 PC**로 에이전트를 쓰고, **개인별로 PROCESS_LOG를 따로** 남긴다. 에이전트는 시작할 때 **팀명·본인 이름만** 물어본다(팀원 전원 이름 X).
-- **PROCESS_LOG 제출은 개인별**: 각자 본인 로그를 **영문 파일명** `<팀영문명>_<이름로마자>_PROCESS_LOG.md`(예: `teamA_kim_PROCESS_LOG.md`)로 저장해 제출한다. 한글 파일명은 압축 시 깨지므로 금지(한글 이름은 파일 안에). 운영자가 팀별로 모아 채점하고, **전원 참여(③)는 팀별 개인 로그 수 + Day2 1인 60초 미니시연**으로 확인한다.
-- 코드·산출물 공유는 편한 방법으로: git(fork/clone, 커밋이력은 ① 가점) / 공유 드라이브 / 각자 작업 후 합치기. **git은 필수 아님.**
-- 팀 공통 산출물(동작물·Before/After·발표자료)은 **팀당 1번**, 개인 로그는 **각자** 제출.
+**예보사업부 AI·AX 해커톤 A팀**
 
-> **git은 필수가 아니다.** 채점은 git 사용 능력에 의존하지 않는다 — 잘 쓰면 ① 가점일 뿐.
+- 최범규 — 스킬 설계·논문 조사·구현
+- 오유정 — 설계 스펙·데모 시나리오·재현성 실험
 
 ---
 
-## 기존 프로젝트에서 작업하려면 (킷 폴더 대신 내 repo에서)
+## 보안 주의
 
-1. 이 저장소의 `CLAUDE.md`(또는 `AGENTS.md`/`.cursorrules`)를 **너의 프로젝트 루트에 복사**.
-2. 이 저장소의 **`submit/` 폴더를 통째로 복사**해 너의 프로젝트 루트에 둔다. (없으면 에이전트에게 "submit 폴더와 양식 만들어줘"라고 시켜도 됨 — 헤더가 알아서 생성)
-3. 끝. 이제 킷 쓰는 팀과 동일하게 `submit/`에 자동 기록된다.
+미공개 관측 원본·개인정보·대외비 좌표/수치를 외부 AI 서비스에 업로드하지 말 것. 공개 또는 익명화 데이터만 사용한다.
 
 ---
 
-## 채점 한눈에 (총 100점)
+## 라이선스
 
-- **과정 70 (AI가 `submit/` 기록으로 채점)**: 활용 깊이 25 · 재현·전파성 25 · 전원참여 10 · 문제정의 10
-- **결과 30 (심사위원 라이브 데모)**: 동작 완성도 15 · 업무 임팩트 12 · 자유과제 3
-- 화려함보다 **재현 가능한 노하우**가 이긴다.
-
-## 🔒 보안
-
-외부 AI에 **미공개 관측 원본·개인정보·대외비 좌표/수치 업로드 금지.** 공개/익명화 데이터만.
-
----
-
-대회 종합 안내(기획안·공지·일정)는 노션 **「26년 예보사업부 AI·AX 해커톤 대회 안내」** 페이지 참고. 문의: 운영팀 / 박영민 이사
+내부 해커톤 제출물. 외부 공개 전 소속 기관 정책 확인 필요.
