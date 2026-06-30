@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from dataset import Dataset
-from rules import match_rule
+from rules import match_rule, load_rules as _load_rules
 
 
 def _result(check, status, evidence, variable=None) -> dict:
@@ -131,3 +131,23 @@ def check_time(d: Dataset) -> list:
         return [_result("time_axis", "PASS", f"시간 단조·중복없음 ({tvals.size} 스텝)")]
     except Exception as e:
         return [_result("time_axis", "FAIL", f"시간축 검사 실패: {e}")]
+
+
+def run_qc(d: Dataset, rules: dict | None = None) -> dict:
+    if rules is None:
+        rules = _load_rules()
+    checks = []
+    checks += check_schema(d)
+    checks += check_grid(d)
+    checks += check_time(d)
+    try:
+        names = d.data_var_names()
+    except Exception as e:
+        checks.append(_result("schema", "FAIL", f"변수 목록 읽기 실패: {e}"))
+        names = []
+    for name in names:
+        checks += check_variable(d, name, rules)
+    summary = {"PASS": 0, "FAIL": 0, "WARN": 0}
+    for c in checks:
+        summary[c["status"]] = summary.get(c["status"], 0) + 1
+    return {"checks": checks, "summary": summary, "ok": summary["FAIL"] == 0}
