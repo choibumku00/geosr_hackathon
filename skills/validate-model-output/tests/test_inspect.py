@@ -28,3 +28,8 @@ def test_probe_unknown_no_crash(tmp_path):
 def test_probe_missing_file_no_crash():
     r = probe("/no/such/file.nc")
     assert r["openable"] is False
+
+
+def test_probe_directory_no_crash(tmp_path):
+    r = probe(str(tmp_path))   # a directory exists but isn't a readable file
+    assert r["openable"] is False

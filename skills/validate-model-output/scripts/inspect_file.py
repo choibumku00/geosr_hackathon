@@ -19,30 +19,30 @@ def probe(path: str) -> dict:
     if not os.path.exists(path):
         return {"path": path, "format": "unknown", "openable": False,
                 "unknown": True, "head_hex": "", "error": "파일 없음"}
-    fmt = detect_format(path)
+    fmt = "unknown"
     try:
+        fmt = detect_format(path)
         d = open_dataset(path)
-    except UnknownFormatError as e:
+        dom = detect_domain(d)
+        ll = d.latlon()
+        vars_summary = []
+        for name, v in d.variables().items():
+            vars_summary.append({
+                "name": name, "dims": list(v.dims), "units": v.units,
+                "standard_name": v.standard_name,
+            })
+        return {
+            "path": path,
+            "format": d.fmt,
+            "openable": True,
+            "variables": vars_summary,
+            "coord_kind": d.coord_kind(),
+            "latlon": list(ll) if ll else None,
+            "grid_shape": list(d.grid_shape()) if d.grid_shape() else None,
+            "time": d.time_info(),
+            "domain": dom["domain"],
+            "confidence": dom["confidence"],
+        }
+    except Exception as e:
         return {"path": path, "format": fmt, "openable": False,
                 "unknown": True, "head_hex": _head_hex(path), "error": str(e)}
-
-    dom = detect_domain(d)
-    ll = d.latlon()
-    vars_summary = []
-    for name, v in d.variables().items():
-        vars_summary.append({
-            "name": name, "dims": list(v.dims), "units": v.units,
-            "standard_name": v.standard_name,
-        })
-    return {
-        "path": path,
-        "format": d.fmt,
-        "openable": True,
-        "variables": vars_summary,
-        "coord_kind": d.coord_kind(),
-        "latlon": list(ll) if ll else None,
-        "grid_shape": list(d.grid_shape()) if d.grid_shape() else None,
-        "time": d.time_info(),
-        "domain": dom["domain"],
-        "confidence": dom["confidence"],
-    }
