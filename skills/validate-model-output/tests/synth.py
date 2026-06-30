@@ -43,3 +43,16 @@ def gfs_like():
     return ds.assign_coords(
         latitude=(("y", "x"), lat2d), longitude=(("y", "x"), lon2d)
     )
+
+
+def broken_era5_like():
+    """era5_like 기반 고의 결함본: 값범위초과(500K) + 결측구멍 + 위도 비단조."""
+    ds = era5_like().copy(deep=True)
+    t = ds["t2m"].values.copy()
+    t[0, 0, 0] = 500.0          # 물리범위 초과
+    t[0, 1, :] = np.nan         # 결측 구멍(한 위도줄 전체)
+    ds["t2m"].values[:] = t
+    lat = ds["lat"].values.copy()
+    lat[2], lat[3] = lat[3], lat[2]   # 위도 비단조(2개 스왑)
+    ds = ds.assign_coords(lat=lat)
+    return ds
