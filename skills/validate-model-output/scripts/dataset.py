@@ -6,6 +6,20 @@ from typing import Optional
 import numpy as np
 import xarray as xr
 
+
+def open_nc(path: str) -> "xr.Dataset":
+    """비-ASCII(한글) 경로에서 netCDF4 C 라이브러리가 OSError(Errno 22)를 내는
+    Windows 문제를 우회: 기본 엔진 → 실패 시 파이썬 기반 엔진(scipy: NetCDF3, h5netcdf: HDF5) 순으로 시도."""
+    attempts = [dict(), dict(engine="h5netcdf"), dict(engine="scipy")]
+    last_err = None
+    for kw in attempts:
+        try:
+            return xr.open_dataset(path, **kw)
+        except (OSError, ValueError) as e:   # 좁은 예외: ImportError 등은 즉시 전파
+            last_err = e
+            continue
+    raise last_err
+
 # 좌표 이름 후보 (소문자 비교)
 _LAT_NAMES = ("lat", "latitude", "nav_lat", "gphit", "y")
 _LON_NAMES = ("lon", "longitude", "nav_lon", "glamt", "x")

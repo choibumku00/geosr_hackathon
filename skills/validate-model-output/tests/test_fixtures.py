@@ -1,6 +1,7 @@
 import os
 import xarray as xr
 from synth import era5_like, gfs_like
+from dataset import open_nc
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
@@ -21,6 +22,6 @@ def test_fixture_files_exist_and_open():
         assert os.path.exists(path), f"missing fixture {fn} (run make_fixtures.py)"
         with open(path, "rb") as f:
             assert f.read(4)[: len(engine_sig)] == engine_sig
-        ds = xr.open_dataset(path)
+        ds = open_nc(path)
         assert len(ds.data_vars) >= 1
         ds.close()
