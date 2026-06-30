@@ -43,7 +43,37 @@ DISCOVER  →  ELICIT  →  ANALYZE  →  REPORT
 
 ---
 
-## 빠른 시작
+## Claude Code 스킬로 등록하기 (에이전트가 자동으로 쓰게)
+
+이 폴더(`skills/validate-model-output/`)를 Claude Code의 **스킬 디렉터리**에 두면, 에이전트가 `SKILL.md`의 frontmatter(`name`·`description`)로 스킬을 자동 발견하고 — "이 모델 출력 검증해줘"·"이 NetCDF/CSV 분석해줘" 같은 요청에 **스스로 이 스킬을 적용**한다.
+
+**① 개인용 (모든 프로젝트에서 사용)** — `~/.claude/skills/`
+```powershell
+# Windows (PowerShell)
+Copy-Item -Recurse -Force skills\validate-model-output "$env:USERPROFILE\.claude\skills\validate-model-output"
+pip install -r "$env:USERPROFILE\.claude\skills\validate-model-output\requirements.txt"
+```
+```bash
+# macOS / Linux
+cp -r skills/validate-model-output ~/.claude/skills/
+pip install -r ~/.claude/skills/validate-model-output/requirements.txt
+```
+
+**② 프로젝트용 (이 저장소에서만)** — `<프로젝트>/.claude/skills/`
+```bash
+mkdir -p .claude/skills && cp -r skills/validate-model-output .claude/skills/
+```
+
+**등록 후**
+1. Claude Code를 (재)시작 → `SKILL.md` frontmatter로 스킬이 등록된다(`/help`의 skills 목록에서 `validate-model-output` 확인).
+2. 에이전트에게 **"이 모델 출력/관측자료 검증·분석해줘"**라고 하면 `description` 트리거로 알아서 호출한다. (명시 호출: "validate-model-output 스킬 써줘".)
+3. 스크립트는 **등록 위치**(`~/.claude/skills/validate-model-output/scripts/...`)에서 실행되고, 데이터는 **절대경로**로 준다 — 자세한 경로 규약은 `SKILL.md`의 **"0. 설치·경로 규약"** 참조.
+
+> 등록 없이 CLI로 직접 쓰려면 아래 "빠른 시작" 참조.
+
+---
+
+## 빠른 시작 (등록 없이 직접 CLI 실행)
 
 ```bash
 # 의존성 설치 (skills/validate-model-output/ 에서)
