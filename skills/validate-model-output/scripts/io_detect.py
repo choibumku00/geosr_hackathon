@@ -65,8 +65,10 @@ def open_dataset(path: str) -> Dataset:
     if fmt in ("netcdf3", "netcdf4"):
         try:
             ds = open_nc(path)
-        except Exception as e:  # 손상 등
-            raise UnknownFormatError(f"NetCDF 열기 실패: {path} ({e})")
+        except Exception as e:  # 손상·잘림 등
+            raise UnknownFormatError(
+                f"파일 열기 실패(손상/잘림 가능): {path} — {e}"
+            )
         return Dataset(ds, source=path, fmt=fmt)
     if fmt == "csv":
         df = _read_csv_with_fallback(path)

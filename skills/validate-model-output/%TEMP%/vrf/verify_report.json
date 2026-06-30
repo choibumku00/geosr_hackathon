@@ -1,0 +1,45 @@
+{
+  "mode": "grid_to_grid",
+  "ok": true,
+  "model": "data/clean_era5_like.nc",
+  "ref": "data/clean_era5_like.nc",
+  "tz_assumed": false,
+  "accuracy_rows": [
+    {
+      "variable": "t2m",
+      "n": 108,
+      "bias": 0.0,
+      "rmse": 0.0,
+      "si": 0.0,
+      "pearson_r": null
+    },
+    {
+      "variable": "u10",
+      "n": 108,
+      "bias": 0.0,
+      "rmse": 0.0,
+      "si": 0.0,
+      "pearson_r": null
+    },
+    {
+      "variable": "v10",
+      "n": 108,
+      "bias": 0.0,
+      "rmse": 0.0,
+      "si": 0.0,
+      "pearson_r": null
+    }
+  ],
+  "direction_rows": [],
+  "plots": {
+    "scatter": "C:\\Users\\choir\\OneDrive\\文件\\지오시스템리서치\\geosr-hackathon-kit\\skills\\validate-model-output\\%TEMP%\\vrf\\scatter_t2m.png",
+    "taylor": "C:\\Users\\choir\\OneDrive\\文件\\지오시스템리서치\\geosr-hackathon-kit\\skills\\validate-model-output\\%TEMP%\\vrf\\taylor_t2m.png",
+    "diff_map": null,
+    "qq": "C:\\Users\\choir\\OneDrive\\文件\\지오시스템리서치\\geosr-hackathon-kit\\skills\\validate-model-output\\%TEMP%\\vrf\\qq_t2m.png",
+    "timeseries": null,
+    "wave_rose_model": null,
+    "wave_rose_ref": null
+  },
+  "regions": [],
+  "info": "공통 변수 3개: ['t2m', 'u10', 'v10']"
+}

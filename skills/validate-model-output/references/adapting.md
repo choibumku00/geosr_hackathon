@@ -152,10 +152,58 @@ circ_rmse = float(np.sqrt(np.mean(wrap_angle(d_diff)**2)))
 
 ---
 
+## 10. 시간대(TZ) 정규화 (★)
+
+관측(부이 등)과 모델의 시간축 TZ가 다르면 매칭에서 최대 9h 오차가 생긴다.
+
+**확인 순서**:
+1. NetCDF — `d.xr["time"].attrs.get("units", "")` 로 CF units 확인 ("hours since … UTC" 등).
+2. CSV — 보통 TZ 표기 없음. 컬럼 값이 "+09:00" 포함 시 파악; 없으면 사용자에 질문.
+3. 부이: KST(UTC+9) 흔함. 모델: 보통 UTC.
+
+```python
+from preprocess import tz_to_utc
+times_utc, assumed = tz_to_utc(times, tz="KST")   # tz=None → UTC가정, assumed=True
+# assumed=True면 리포트 경고: "TZ 미확인=UTC가정; KST면 9h 어긋남 위험"
+```
+
+`tz_to_utc` 시그니처: `(times, tz=None) -> (times_utc, assumed: bool)`
+- `tz='UTC'` → 그대로 통과.
+- `tz='KST'` 또는 `'+09:00'` → −9h 적용 후 UTC 반환.
+- `tz=None` → UTC 가정, `assumed=True`.
+
+---
+
+## 11. 점관측 좌표 주입 — R3-b (★)
+
+점관측 CSV에 lat/lon 컬럼이 없는 경우 좌표를 외부에서 주입한다.
+**코어 자동 경로에 points.list 전용 파서를 내장하지 말 것** — 범용 주입구만 사용.
+
+**처리 순서**:
+1. 같은 폴더·상위 폴더에서 좌표 파일 탐색 (points.list, stations.csv, station_info.xlsx 등).
+2. 파일이 없으면 사용자에게 형식·경로를 물어본다.
+3. 형식을 실시간으로 파악해 `{정점ID: (lat, lon)}` 매핑을 생성한다.
+4. `preprocess.inject_point_coords(station_ids, mapping)` 으로 주입.
+
+```python
+from preprocess import inject_point_coords, parse_points_list
+
+# parse_points_list: 에이전트/CLI가 명시 호출 — 코어 자동경로 삽입 금지
+mapping = parse_points_list("path/to/points.list")   # best-effort 파서
+# 또는 실시간 파악해 직접 구성
+mapping = {"STN001": (35.12, 129.04), "STN002": (33.46, 126.93)}
+
+lats, lons = inject_point_coords(df["station"].values, mapping)
+# lats, lons를 이후 cKDTree 매칭에 사용
+```
+
+---
+
 ## 참조
 
 - `scripts/dataset.py` — `open_nc`, `Dataset`, `Variable` 인터페이스
 - `scripts/io_detect.py` — 포맷 자동감지, `open_dataset`
+- `scripts/preprocess.py` — `tz_to_utc`, `inject_point_coords`, `parse_points_list`, `match_points_to_mesh`, `build_pairs`, `common_time_index`
 - `scripts/router.py` — `detect_domain`
 - `scripts/qc.py` — `run_qc`, `check_variable`, `check_grid`, `check_time`
 - `tests/synth_waves.py` — WW3 mesh + 부이 cp949 합성 SAMPLE (구조 참조용)
