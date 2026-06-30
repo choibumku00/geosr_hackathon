@@ -25,9 +25,10 @@ def test_discover_folder():
 
 
 def test_cli_discover_runs():
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     out = subprocess.run(
         [sys.executable, os.path.join(SCRIPTS, "cli.py"), "discover", DATA],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", env=env,
     )
     assert out.returncode == 0
     assert "clean_era5_like.nc" in out.stdout

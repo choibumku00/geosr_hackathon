@@ -46,3 +46,13 @@ def test_unruled_variable_warns_not_crash():
     res = check_variable(d, "mystery", load_rules())
     # 규칙 없음 → 크래시 없이 WARN 포함
     assert any(r["status"] == "WARN" for r in res)
+
+
+def test_fillvalue_not_range_violation():
+    vals = np.full((3, 3), 280.0)
+    vals[0, 0] = 9.969209968386869e36   # NetCDF 기본 _FillValue 센티넬
+    d = _ds_from("t2m", vals, "K", "air_temperature")
+    res = check_variable(d, "t2m", load_rules())
+    # 센티넬은 값범위 위반이 아니라 결측으로 분류
+    assert "FAIL" not in _status(res, "value_range")
+    assert any(r["check"] == "missing" for r in res)

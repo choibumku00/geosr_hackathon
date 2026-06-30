@@ -52,7 +52,8 @@ def cmd_validate(args) -> int:
                           "evidence": f"열기 실패: {e}"}],
               "summary": {"PASS": 0, "FAIL": 1, "WARN": 0}, "ok": False}
         print(render_markdown(qc, args.file))
-        write_report(qc, args.file, out_dir)
+        _, mpath = write_report(qc, args.file, out_dir)
+        print(f"\n[리포트 저장] {mpath}")
         return 1
     qc = run_qc(d)
     print(render_markdown(qc, args.file))
@@ -62,6 +63,10 @@ def cmd_validate(args) -> int:
 
 
 def main(argv=None) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
     p = argparse.ArgumentParser(prog="validate-model-output")
     sub = p.add_subparsers(dest="cmd", required=True)
 

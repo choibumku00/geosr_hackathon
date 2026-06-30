@@ -45,3 +45,11 @@ def test_time_monotonic_pass():
 
 def test_schema_has_vars():
     assert "PASS" in _status(check_schema(_grid_ds([0.0, 1.0])), "schema")
+
+
+def test_time_nonmonotonic_fail():
+    t = np.array(["2022-09-06T12", "2022-09-06T00", "2022-09-06T06"], dtype="datetime64[h]")
+    da = xr.DataArray(np.zeros((3, 2, 2)), dims=("time", "lat", "lon"),
+                      coords={"time": t, "lat": [0, 1], "lon": [0, 1]}, attrs={"units": "K"})
+    res = check_time(Dataset(xr.Dataset({"t2m": da})))
+    assert "FAIL" in _status(res, "time_axis")

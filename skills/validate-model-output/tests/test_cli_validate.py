@@ -30,3 +30,4 @@ def test_validate_missing_file_no_crash(tmp_path):
     out = _run(["validate", os.path.join(DATA, "nope_does_not_exist.nc"), "--out", str(tmp_path)])
     assert out.returncode == 1          # 크래시(>1)가 아니라 정상 종료코드 1
     assert "FAIL" in out.stdout or "열" in out.stdout
+    assert os.path.exists(os.path.join(tmp_path, "report.md"))

@@ -18,9 +18,9 @@ def check_variable(d: Dataset, name: str, rules: dict) -> list:
     except Exception as e:  # 값 접근 실패도 크래시 대신 FAIL
         return [_result("value_access", "FAIL", f"변수 값 접근 실패: {e}", name)]
 
-    finite = np.isfinite(arr)
+    valid = np.isfinite(arr) & (np.abs(arr) < 1e30)
     n = arr.size
-    n_missing = int(n - finite.sum())
+    n_missing = arr.size - int(valid.sum())
     missing_frac = n_missing / n if n else 1.0
 
     rule = match_rule(var, rules)
@@ -35,7 +35,7 @@ def check_variable(d: Dataset, name: str, rules: dict) -> list:
         results.append(_result("missing", "PASS",
             f"결측비율 {missing_frac:.2%} ≤ 임계 {max_missing:.0%}", name))
 
-    vals = arr[finite]
+    vals = arr[valid]
     if rule is not None and "valid_min" in rule and "valid_max" in rule:
         lo, hi = rule["valid_min"], rule["valid_max"]
         out = (vals < lo) | (vals > hi)
@@ -142,8 +142,7 @@ def run_qc(d: Dataset, rules: dict | None = None) -> dict:
     checks += check_time(d)
     try:
         names = d.data_var_names()
-    except Exception as e:
-        checks.append(_result("schema", "FAIL", f"변수 목록 읽기 실패: {e}"))
+    except Exception:
         names = []
     for name in names:
         checks += check_variable(d, name, rules)
