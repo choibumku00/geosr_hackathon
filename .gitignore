@@ -16,3 +16,6 @@ __pycache__/
 !skills/**/data/*.nc
 !skills/**/tests/**/*.nc
 !project/scenario/fixtures/*.nc
+node_modules/
+package-lock.json
+project/presentation/package*.json
