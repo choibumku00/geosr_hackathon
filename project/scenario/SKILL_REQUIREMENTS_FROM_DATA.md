@@ -21,6 +21,22 @@
 
 ---
 
+## 0.6 M3+ 검증 결과 (TC-A 재실행 — 대부분 해결, 신규 블로커 1)
+
+M3(+일부 M4) 푸시 후 재검증. 스킬 테스트 **241 passed / 1 failed**.
+- ✅ **R1 인코딩 해결**: 부이 cp949 CSV가 **열림**(컬럼 인식). 
+- ✅ **R2 해결**: WW3가 `coord_kind=mesh`·domain=`waves`·role=output로 정확 분류.
+- ✅ **신규 기능**: `verify` 서브커맨드 + `preprocess`·metrics(basic/pattern/distribution/circular)·`plots`·recipe 문서.
+- 🚩 **신규 블로커(R3-b) — 파랑 데모 #1 막힘**: 실제 부이 CSV(`OBS_BUOY_TIM`)·번들 fixture 모두 **lat/lon 컬럼이 없다**. 좌표는 **`points.list`에 정점ID(`지점`)로 분리**돼 있음. 현재 `verify`(SAMPLE)는 "obs에 lat/lon 있음"을 가정 → 매칭 실패("lat/lon 못 찾음").
+  - **필요**: `preprocess`/`verify`가 **정점ID→좌표 조인**(`points.list` 또는 `--points` 인자)으로 부이 위치를 얻어 mesh 최근접 매칭. (R3의 실데이터 형태 반영)
+- ⚠️ **R4 잔여**: 부이 도메인이 `meteorology`로 잡힘(부이에 풍속·기압·기온 등 기상컬럼이 파랑컬럼보다 많아 투표 우세). 파랑 매칭 의도와 어긋날 수 있음 → **유의파고(headline) 가중** 또는 사용자 확정으로 보완.
+- ⚠️ **GFS 회귀 의심**: GFS `coord_kind`가 이전 `2d`→현재 `none`. mesh 리팩터 영향 가능 → 2D 좌표(lat/lon as 2D data_vars) 인식 점검 필요.
+- ⚠️ **단위테스트 1건 실패**: `test_metrics_circular::test_constant_array_nan`(상수배열 원형상관 NaN 처리).
+
+→ **요지**: R1·R2는 끝. 파랑 데모를 끝내려면 **정점ID→좌표 조인(R3-b)** 이 M4의 다음 과제. GFS 회귀·circular 테스트는 사소하나 기록.
+
+---
+
 ## R1. CSV 인코딩 자동감지 + 한글 헤더 매핑 〔치명적 · M1(io_detect)+M3(aliases)〕
 
 **증상(재현됨):** 부이 CSV는 **cp949**, 컬럼이 **한글**(`유의파고(m)`·`파주기(sec)`·`파향(deg)`·`수온(°C)`·`풍속(m/s)`…).
