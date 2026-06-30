@@ -1,0 +1,46 @@
+# 층위1 QC 규칙 (intrinsic, 기준자료 불필요). 변수→물리범위·결측임계.
+# 매칭: standard_name / name_patterns(re.search) / units. units_any 있으면 단위 일치 필수.
+# 임계는 모두 advisory(영역·변수 의존). 단위 환산 없음 — 단위별 규칙 분리.
+rules:
+  - name: temperature_K
+    standard_names: [air_temperature, sea_water_temperature, sea_surface_temperature, dew_point_temperature]
+    name_patterns: ['^t2m$', '^tmp$', '^dpt$', '^t$', 'sst']
+    units_any: [K, kelvin, Kelvin]
+    valid_min: 180.0
+    valid_max: 340.0
+    max_missing_frac: 0.6
+  - name: temperature_C
+    standard_names: [air_temperature, sea_water_temperature, sea_surface_temperature, dew_point_temperature]
+    name_patterns: ['^t2m$', '^tmp$', '^dpt$', 'sst']
+    units_any: [degC, celsius, Celsius, C, degrees_celsius, "degree_Celsius"]
+    valid_min: -90.0
+    valid_max: 60.0
+    max_missing_frac: 0.6
+  - name: wind_component
+    standard_names: [eastward_wind, northward_wind]
+    name_patterns: ['^u10$', '^v10$', 'ugrd', 'vgrd', '^uo$', '^vo$']
+    valid_min: -120.0
+    valid_max: 120.0
+    max_missing_frac: 0.6
+  - name: mslp_Pa
+    standard_names: [air_pressure_at_mean_sea_level]
+    name_patterns: ['mslp', 'prmsl']
+    units_any: [Pa, pascal, Pascal]
+    valid_min: 85000.0
+    valid_max: 110000.0
+    max_missing_frac: 0.6
+  - name: precip_rate
+    standard_names: [precipitation_flux, rainfall_rate]
+    name_patterns: ['prate', 'precip', 'rain']
+    valid_min: 0.0
+    valid_max: 0.1
+    max_missing_frac: 0.6
+  - name: salinity
+    standard_names: [sea_water_salinity, sea_surface_salinity]
+    name_patterns: ['^so$', '^sss$', 'salin']
+    valid_min: 0.0
+    valid_max: 45.0
+    max_missing_frac: 0.6
+default:
+  max_missing_frac: 0.9
+  sigma: 6.0
