@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import shutil
+import tempfile
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -19,6 +22,17 @@ def open_nc(path: str) -> "xr.Dataset":
             last_err = e
             continue
     raise last_err
+
+
+def write_nc(ds: "xr.Dataset", dest: str, **kw) -> str:
+    """한글/비-ASCII 경로에 NetCDF 안전 쓰기: ASCII temp 디렉터리에 쓴 뒤 dest로 복사
+    (netCDF4 C 라이브러리가 Windows에서 비-ASCII 경로를 못 여는 문제 우회). dest 반환."""
+    fname = os.path.basename(dest)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = os.path.join(tmpdir, fname)
+        ds.to_netcdf(tmp_path, **kw)
+        shutil.copy2(tmp_path, dest)
+    return dest
 
 # 좌표 이름 후보 (소문자 비교)
 _LAT_NAMES = ("lat", "latitude", "nav_lat", "gphit", "y")

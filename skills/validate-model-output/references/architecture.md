@@ -104,7 +104,7 @@ from dataset   import open_nc        # xr.Dataset 직접 (d.xr 없이 xr API)
 ```
 
 **한글 경로 지원**: `open_nc()` 는 `h5netcdf` → `scipy` 엔진 순서로 폴백.
-NetCDF 쓰기에는 `make_fixtures._write_nc(ds, dest, **kw)` 를 경유한다.
+NetCDF 쓰기에는 `dataset.write_nc(ds, dest, **kw)` 를 경유한다.
 
 **mesh 구조**: `coord_kind()='mesh'` 이면 lat/lon 이 data_var 에 저장된 비정형 UGRID.
 `d.xr["latitude"].values` 로 node 배열을 직접 추출한다.

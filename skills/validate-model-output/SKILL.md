@@ -74,7 +74,7 @@ for n in d.data_var_names():
     print(f"  {n}: dims={v.dims}, units={v.units}, std={v.standard_name}")
 ```
 
-**한글 경로 NetCDF 쓰기는 반드시 `make_fixtures._write_nc(ds, dest, **kw)` 경유.**
+**한글 경로 NetCDF 쓰기는 반드시 `dataset.write_nc(ds, dest, **kw)` 경유.**
 CSV cp949 읽기는 `pd.read_csv(path, encoding='cp949')`; 컬럼명은 한글 alias→영문 매핑 후 사용.
 
 ---

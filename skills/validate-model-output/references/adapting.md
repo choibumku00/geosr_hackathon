@@ -17,7 +17,7 @@ from dataset import open_nc          # NetCDF 직접 → xr.Dataset 반환 (d.xr
 | 상황 | 대처 |
 |------|------|
 | 한글 경로 NetCDF | `open_nc(path)` — engine 자동 폴백(h5netcdf→scipy) |
-| NetCDF 쓰기 한글 경로 | `make_fixtures._write_nc(ds, dest, **kw)` 경유 |
+| NetCDF 쓰기 한글 경로 | `dataset.write_nc(ds, dest, **kw)` 경유 |
 | CSV cp949 | `pd.read_csv(path, encoding='cp949')` |
 | 미지 포맷(`openable=false`) | `head_hex` 확인 → 즉석 throwaway 파서 작성 |
 
