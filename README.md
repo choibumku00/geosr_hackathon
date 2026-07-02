@@ -32,6 +32,44 @@ DISCOVER → ELICIT → ANALYZE → DEEPEN(반복) → REPORT
 
 ---
 
+## 설치 (Claude Code · Codex)
+
+두 도구 모두 **`SKILL.md`가 든 폴더를 스킬 디렉터리에 두면** 자동 인식한다(Agent Skills 공개 표준). 이 저장소의 `skills/validate-model-output/` 폴더(또는 배포용 `skills/validate-model-output-skill.zip`을 푼 `validate-model-output/`)를 아래 위치에 복사하면 된다.
+
+**공통 — 파이썬 의존성 설치**
+```bash
+pip install -r skills/validate-model-output/requirements.txt   # matplotlib·cartopy 등
+# cartopy 설치가 어려우면: conda install -c conda-forge cartopy  (없어도 지도는 격자선 fallback으로 동작)
+```
+
+### Claude Code
+스킬 디렉터리 — 개인용 `~/.claude/skills/`(모든 프로젝트), 프로젝트용 `<repo>/.claude/skills/`.
+```bash
+# 개인용 (macOS/Linux)
+cp -r skills/validate-model-output ~/.claude/skills/
+# 프로젝트용 (이 저장소에서만)
+mkdir -p .claude/skills && cp -r skills/validate-model-output .claude/skills/
+```
+```powershell
+# 개인용 (Windows PowerShell)
+Copy-Item -Recurse -Force skills\validate-model-output "$env:USERPROFILE\.claude\skills\validate-model-output"
+```
+새 세션이면 자동 인식된다(세션 중 추가·수정도 대개 즉시 반영). 인식 확인·호출: `/validate-model-output`.
+
+### Codex CLI
+스킬 디렉터리 — 사용자용 `~/.agents/skills/`, 프로젝트용 `<repo>/.agents/skills/`(상위 폴더까지 탐색). (Windows: `%USERPROFILE%\.agents\skills\`)
+```bash
+# 사용자용
+mkdir -p ~/.agents/skills && cp -r skills/validate-model-output ~/.agents/skills/
+# 프로젝트용
+mkdir -p .agents/skills && cp -r skills/validate-model-output .agents/skills/
+```
+Codex는 스킬 변경을 자동 감지한다(안 보이면 재시작). 인식 확인: `/skills`, 명시 호출: `$validate-model-output`. (비활성화는 `~/.codex/config.toml`.)
+
+> **설치 후**: CLI를 직접 칠 필요 없이 검증할 파일/폴더를 주고 자연어로 요청하면(예: "GFS를 ERA5 기준으로 검증해줘, GFS가 우리 산출물") `description` 트리거로 스킬이 호출돼 5단계(DISCOVER→ELICIT→ANALYZE→DEEPEN→REPORT)로 진행한다.
+
+---
+
 ## 구성
 
 ```
