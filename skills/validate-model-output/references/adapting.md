@@ -118,10 +118,10 @@ circ_rmse = float(np.sqrt(np.mean(wrap_angle(d_diff)**2)))
 
 | 축 | 최소 요소 | 카탈로그 참조 |
 |----|----------|--------------|
-| 정확도+편향 | bias·RMSE·SI·R | `project/research/01_error_statistics.md` |
-| 패턴/위상 | 시계열 overlay + 잔차 패널 | `project/research/06_timeseries_signal.md` |
-| 분포 | QQ·파랑장미·PDF/CDF | `project/research/figures/18_fig_waves.md` |
-| §G | 캡션: reference≠truth, 임계=advisory, 대표성 오차 | `project/research/00_overview_taxonomy.md §G` |
+| 정확도+편향 | bias·RMSE·SI·R | `references/research/01_error_statistics.md` |
+| 패턴/위상 | 시계열 overlay + 잔차 패널 | `references/research/06_timeseries_signal.md` |
+| 분포 | QQ·파랑장미·PDF/CDF | `references/research/figures/18_fig_waves.md` |
+| §G | 캡션: reference≠truth, 임계=advisory, 대표성 오차 | `references/research/00_overview_taxonomy.md §G` |
 
 ---
 
@@ -218,7 +218,7 @@ lats, lons = inject_point_coords(df["station"].values, mapping)
 
 ## 12. 카탈로그(01~15, figures 16~22)를 레시피로 쓰는 법
 
-> 목표: 도메인이 정해지면 `project/research/` 카탈로그를 레시피 매뉴얼처럼 꺼내 쓴다.
+> 목표: 도메인이 정해지면 `references/research/` 카탈로그를 레시피 매뉴얼처럼 꺼내 쓴다.
 > `00_overview_taxonomy.md` §C절(도메인 → default bundle 표)이 시작점이다.
 
 ### 12-a. 3단계 진입법
@@ -337,10 +337,9 @@ hs_model = normalize_units(ds["hs_ww3"], target_unit="m")
 - `scripts/preprocess.py` — `tz_to_utc`, `inject_point_coords`, `parse_points_list`, `match_points_to_mesh`, `build_pairs`, `common_time_index`
 - `scripts/router.py` — `detect_domain`
 - `scripts/qc.py` — `run_qc`, `check_variable`, `check_grid`, `check_time`
-- `tests/synth_waves.py` — WW3 mesh + 부이 cp949 합성 SAMPLE (구조 참조용)
-- `project/research/00_overview_taxonomy.md` — §C(도메인→recipe), §G(함정 6원칙), 카탈로그 색인
-- `project/research/01_error_statistics.md` — bias·RMSE·SI·r·Taylor·Target 카드
-- `project/research/08_domain_waves.md` — 파랑 검증 지표 카탈로그
-- `project/research/figures/16_fig_common.md` — 공통 그림 카드(산점도·QQ·Taylor·Target)
-- `project/research/figures/18_fig_waves.md` — 파랑 그림 카탈로그
-- `project/research/15_preprocessing_regridding_colocation.md` — 전처리·matchup·QC 카드
+- `references/research/00_overview_taxonomy.md` — §C(도메인→recipe), §G(함정 원칙), 카탈로그 색인
+- `references/research/01_error_statistics.md` — bias·RMSE·SI·r·Taylor·Target 카드
+- `references/research/08_domain_waves.md` — 파랑 검증 지표 카탈로그
+- `references/research/figures/16_fig_common.md` — 공통 그림 카드(산점도·QQ·Taylor·Target)
+- `references/research/figures/18_fig_waves.md` — 파랑 그림 카탈로그
+- `references/research/15_preprocessing_regridding_colocation.md` — 전처리·matchup·QC 카드

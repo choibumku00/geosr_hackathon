@@ -4,10 +4,6 @@
 ```
 # 실행 위치: skills/validate-model-output/
 python -m pip install -r requirements.txt
-python scripts/make_fixtures.py        # 기상 합성 fixture 생성 (테스트용)
-python scripts/make_waves_fixtures.py  # 파랑 합성 fixture 생성 (WW3 mesh + 부이 cp949)
-python -m pytest -v                    # 전체 테스트 (421 passed / 0 warnings)
-python scripts/run_acceptance.py       # 인수테스트 5/5 PASS 확인
 ```
 
 ## PHASE 0 — 발견 (discover / inspect)

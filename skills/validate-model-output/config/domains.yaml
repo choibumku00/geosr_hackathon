@@ -1,4 +1,14 @@
 # 변수 standard_name / 이름 패턴 → 도메인 (router 의 데이터원, taxonomy C절 기반)
+#
+# 각 도메인 블록:
+#   standard_names : CF standard_name 직접 매칭 (강한 신호)
+#   name_patterns  : 변수명 정규식(re.search, 소문자 기준) (약한 신호)
+#   headline       : 그 도메인을 "정의"하는 대표변수 — 존재 시 가중 3표(다른 도메인의
+#                    강제·부수 변수가 공존해도 이 도메인이 이기게)
+#
+# ★ 확장(전파성): 새 분야는 아래 형식으로 블록 1개만 추가하면 라우터가 자동 인식.
+#   (도메인 카드가 없어도 router.characterize()가 데이터 특성 기반 일반 배터리로 진행한다.)
+#   상세 절차·템플릿: references/extending.md
 domains:
   meteorology:
     standard_names:
@@ -6,7 +16,6 @@ domains:
       - eastward_wind
       - northward_wind
       - air_pressure_at_mean_sea_level
-      - precipitation_amount
       - relative_humidity
       - wind_speed        # aliases.yaml canonical key (풍속)
     name_patterns:
@@ -20,9 +29,9 @@ domains:
       - "mslp"
       - "prmsl"
       - "dpt"
-      - "prate"
       - "dswrf"
       - "gust"
+    headline: []          # 광역 도메인 — 대표변수 없음(강제변수로 다른 도메인을 덮지 않게)
   ocean_temp_salinity:
     standard_names:
       - sea_water_temperature
@@ -35,6 +44,11 @@ domains:
       - "^thetao$"
       - "^so$"
       - "salin"
+    headline:
+      - sea_water_temperature
+      - sea_surface_temperature
+      - sea_water_salinity
+      - sea_surface_salinity
   waves:
     standard_names:
       - sea_surface_wave_significant_height
@@ -45,6 +59,14 @@ domains:
       - "^hs$"
       - "hm0"
       - "swh"
+      - "^tp$"
+      - "^tm0[12]$"
+      - "^t0[12]$"
+      - "mwd"
+      - "^dp$"
+    headline:
+      - sea_surface_wave_significant_height
+      - significant_wave_height
   currents:
     standard_names:
       - eastward_sea_water_velocity
@@ -52,6 +74,11 @@ domains:
     name_patterns:
       - "^uo$"
       - "^vo$"
+      - "^ucur$"
+      - "^vcur$"
+    headline:
+      - eastward_sea_water_velocity
+      - northward_sea_water_velocity
   sea_level:
     standard_names:
       - sea_surface_height_above_geoid
@@ -61,3 +88,247 @@ domains:
       - "^sla$"
       - "^adt$"
       - "zos"
+    headline:
+      - sea_surface_height_above_geoid
+      - sea_surface_height_above_reference_ellipsoid
+  precipitation:
+    standard_names:
+      - precipitation_amount
+      - precipitation_flux
+      - lwe_precipitation_rate
+      - thickness_of_rainfall_amount
+      - rainfall_amount
+      - rainfall_flux
+      - rainfall_rate
+      - lwe_thickness_of_precipitation_amount
+      - lwe_thickness_of_stratiform_precipitation_amount
+      - lwe_thickness_of_convective_precipitation_amount
+      - lwe_stratiform_precipitation_rate
+      - lwe_convective_precipitation_rate
+      - convective_precipitation_flux
+      - convective_precipitation_amount
+      - stratiform_precipitation_flux
+      - stratiform_precipitation_amount
+      - large_scale_precipitation_amount
+    name_patterns:
+      - "precip"
+      - "rainfall"
+      - "(^|_)(apcp|prcp|prcptot|pcp)(_|$)"
+      - "(qpe|qpf)"
+      - "(imerg|gsmap|cmorph|gpcp|trmm)"
+      - "rx[15]day|r95p|r99p|sdii"
+    headline:
+      - precipitation_flux
+      - precipitation_amount
+      - lwe_precipitation_rate
+      - thickness_of_rainfall_amount
+  sea_ice:
+    standard_names:
+      - sea_ice_area_fraction
+      - sea_ice_thickness
+      - sea_ice_x_velocity
+      - sea_ice_y_velocity
+      - sea_ice_speed
+      - sea_ice_extent
+      - sea_ice_volume
+      - sea_ice_freeboard
+      - sea_ice_classification
+      - sea_ice_and_surface_snow_amount
+      - surface_snow_thickness_where_sea_ice
+      - age_of_sea_ice
+    name_patterns:
+      - "sea_ice"
+      - "siconc"
+      - "sithick"
+      - "sivol"
+      - "siextent"
+      - "(^|_)ice_conc"
+      - "ice_thick"
+      - "ice_drift"
+      - "ice_edge"
+      - "siage"
+    headline:
+      - sea_ice_area_fraction
+      - sea_ice_thickness
+      - sea_ice_x_velocity
+      - sea_ice_speed
+  air_quality:
+    standard_names:
+      - mass_concentration_of_pm2p5_ambient_aerosol_in_air
+      - mass_concentration_of_pm10_ambient_aerosol_in_air
+      - mole_fraction_of_ozone_in_air
+      - mass_concentration_of_ozone_in_air
+      - mole_fraction_of_nitrogen_dioxide_in_air
+      - mass_concentration_of_nitrogen_dioxide_in_air
+      - mole_fraction_of_sulfur_dioxide_in_air
+      - mass_concentration_of_sulfur_dioxide_in_air
+      - mole_fraction_of_carbon_monoxide_in_air
+      - atmosphere_optical_thickness_due_to_aerosol
+      - atmosphere_optical_thickness_due_to_ambient_aerosol_particles
+      - troposphere_mole_content_of_nitrogen_dioxide
+      - atmosphere_mole_content_of_nitrogen_dioxide
+      - mass_concentration_of_sulfate_dry_aerosol_in_air
+      - mass_concentration_of_nitrate_dry_aerosol_in_air
+      - mass_concentration_of_ammonium_dry_aerosol_in_air
+      - mass_concentration_of_elemental_carbon_dry_aerosol_in_air
+      - mole_fraction_of_formaldehyde_in_air
+    name_patterns:
+      - 'pm2\.?5'
+      - "pm10"
+      - "(^|_)o3(_|$)"
+      - "ozone"
+      - "(^|_)no2(_|$)"
+      - "nitrogen_dioxide"
+      - "(^|_)so2(_|$)"
+      - "sulfur_dioxide|sulphur_dioxide"
+      - "carbon_monoxide"
+      - "(^|_)nox(_|$)"
+      - "aod|aerosol_optical"
+      - "optical_thickness_due_to_aerosol"
+      - "(^|_)(so4|no3|nh4)(_|$)"
+      - "formaldehyde|hcho"
+    headline:
+      - mass_concentration_of_pm2p5_ambient_aerosol_in_air
+      - mole_fraction_of_ozone_in_air
+      - mole_fraction_of_nitrogen_dioxide_in_air
+      - atmosphere_optical_thickness_due_to_aerosol
+  hydrology:
+    standard_names:
+      - water_volume_transport_in_river_channel
+      - river_discharge
+      - surface_runoff_amount
+      - subsurface_runoff_amount
+      - runoff_amount
+      - runoff_flux
+      - water_flux_into_sea_water_from_rivers
+    name_patterns:
+      - "discharge"
+      - "streamflow"
+      - "runoff"
+      - "river_flow"
+    headline:
+      - water_volume_transport_in_river_channel
+      - river_discharge
+      - runoff_amount
+  land_surface:
+    standard_names:
+      - mass_content_of_water_in_soil_layer
+      - moisture_content_of_soil_layer
+      - soil_moisture_content
+      - volume_fraction_of_condensed_water_in_soil
+      - surface_temperature
+      - water_evapotranspiration_flux
+      - surface_upward_latent_heat_flux
+      - surface_snow_amount
+      - lwe_thickness_of_surface_snow_amount
+      - surface_snow_area_fraction
+      - leaf_area_index
+      - surface_albedo
+      - soil_temperature
+      - gross_primary_productivity_of_biomass_expressed_as_carbon
+    name_patterns:
+      - "soil_moist"
+      - "(^|_)sm(_|$)"
+      - "evapotransp"
+      - "(^|_)swe(_|$)"
+      - "snow_cover|snow_depth|snow_area"
+      - "(^|_)lai(_|$)"
+      - "albedo"
+      - "(^|_)lst(_|$)"
+      - "ndvi"
+    headline:
+      - mass_content_of_water_in_soil_layer
+      - surface_temperature
+      - water_evapotranspiration_flux
+      - surface_snow_amount
+      - leaf_area_index
+      - surface_albedo
+  clouds_radiation:
+    standard_names:
+      - surface_downwelling_shortwave_flux_in_air
+      - surface_downwelling_longwave_flux_in_air
+      - surface_upwelling_shortwave_flux_in_air
+      - surface_upwelling_longwave_flux_in_air
+      - toa_outgoing_longwave_flux
+      - toa_outgoing_shortwave_flux
+      - toa_incoming_shortwave_flux
+      - toa_net_downward_shortwave_flux
+      - cloud_area_fraction
+      - cloud_area_fraction_in_atmosphere_layer
+      - atmosphere_mass_content_of_cloud_liquid_water
+      - atmosphere_mass_content_of_cloud_ice
+      - atmosphere_optical_thickness_due_to_cloud
+    name_patterns:
+      - "(^|_)(rsds|rlds|rsus|rlus|rsut|rlut|rsdt|rtmt)(_|$)"
+      - "downwelling_.*_flux"
+      - "outgoing_.*_flux"
+      - "cloud_area_fraction"
+      - "cloud_fraction"
+      - "(^|_)(clt|cldfra|cldfrac|cod)(_|$)"
+      - "(^|_)olr(_|$)"
+    headline:
+      - surface_downwelling_shortwave_flux_in_air
+      - toa_outgoing_longwave_flux
+      - cloud_area_fraction
+  ocean_biogeochemistry:
+    standard_names:
+      - mass_concentration_of_chlorophyll_in_sea_water
+      - mass_concentration_of_chlorophyll_a_in_sea_water
+      - mole_concentration_of_dissolved_molecular_oxygen_in_sea_water
+      - mass_concentration_of_oxygen_in_sea_water
+      - sea_water_ph_reported_on_total_scale
+      - mole_concentration_of_nitrate_in_sea_water
+      - mole_concentration_of_phosphate_in_sea_water
+      - mole_concentration_of_silicate_in_sea_water
+      - surface_partial_pressure_of_carbon_dioxide_in_sea_water
+      - surface_partial_pressure_of_carbon_dioxide_in_air
+      - sea_water_alkalinity_expressed_as_mole_equivalent
+    name_patterns:
+      - "chlorophyll"
+      - "(^|_)chl(_a)?(_|$)"
+      - "chla"
+      - "dissolved_oxygen"
+      - "(^|_)o2(_|$)"
+      - "(^|_)ph(_|$)"
+      - "pco2|fco2"
+      - "nitrate|(^|_)no3(_|$)"
+      - "phosphate|(^|_)po4(_|$)"
+      - "silicate"
+      - "alkalinity|(^|_)talk(_|$)"
+      - "primary_production|(^|_)npp(_|$)"
+    headline:
+      - mass_concentration_of_chlorophyll_in_sea_water
+      - mole_concentration_of_dissolved_molecular_oxygen_in_sea_water
+      - sea_water_ph_reported_on_total_scale
+      - surface_partial_pressure_of_carbon_dioxide_in_sea_water
+      - mole_concentration_of_nitrate_in_sea_water
+  space_weather:
+    standard_names:
+      - geomagnetic_kp_index
+      - geomagnetic_disturbance_storm_time_index
+      - geomagnetic_ap_index
+      - geomagnetic_auroral_electrojet_index
+      - geomagnetic_sym_h_index
+      - total_electron_content
+      - vertical_total_electron_content
+      - solar_radio_flux_f10.7
+      - solar_wind_speed
+      - solar_wind_proton_number_density
+      - interplanetary_magnetic_field_bz
+      - critical_frequency_f2_layer
+      - peak_electron_density_f2_layer
+    name_patterns:
+      - "(^|_)kp(_|$)"
+      - "(^|_)dst(_|$)"
+      - "(^|_)(ap|ae)(_|$)"
+      - "sym.?h"
+      - "(^|_)v?tec(_|$)"
+      - "total_electron_content"
+      - 'f10\.?7'
+      - "solar_wind"
+      - "(^|_)bz(_|$)"
+      - "fof2|hmf2"
+    headline:
+      - geomagnetic_disturbance_storm_time_index
+      - geomagnetic_kp_index
+      - total_electron_content

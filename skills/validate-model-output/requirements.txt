@@ -4,6 +4,12 @@ h5netcdf>=1.3
 h5py>=3.12
 scipy>=1.13
 PyYAML>=6.0
-pytest>=8.0
 numpy>=2.0
 pandas>=2.0
+matplotlib>=3.8
+# 지도 기반 검증 그림(해안선·육지·위경도)용. 설치가 어려우면 conda-forge 권장:
+#   conda install -c conda-forge cartopy
+# 없거나 실패해도 plots.add_basemap()가 격자선만 그리는 fallback으로 동작(크래시 없음).
+cartopy>=0.22
+# 선택(권장): 해양용 발산/순차 색맵. 없으면 matplotlib 기본 색맵 사용.
+# cmocean>=3.0

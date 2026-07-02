@@ -30,6 +30,12 @@ def _units_ok(var: Variable, rule: dict) -> bool:
 
 
 def _identity_match(var: Variable, rule: dict) -> bool:
+    """변수 '정체' 매칭은 standard_name 또는 name_pattern 으로만 한다.
+
+    units_any 는 정체 신호가 아니라 '필터'(_units_ok)로만 쓴다 — 단위(K 등)만
+    같다고 규칙을 태우면, 온도가 아닌데 K를 쓰는 변수가 온도 규칙에 오탐된다.
+    (범용 검증에서 위험 → units 단독 매칭 금지.)
+    """
     sn = (var.standard_name or "").lower()
     if sn and sn in [s.lower() for s in rule.get("standard_names", [])]:
         return True
@@ -37,9 +43,6 @@ def _identity_match(var: Variable, rule: dict) -> bool:
     for pat in rule.get("name_patterns", []):
         if re.search(pat, name):
             return True
-    units = (var.units or "").strip()
-    if units and units in rule.get("units_any", []):
-        return True
     return False
 
 

@@ -32,3 +32,177 @@ aliases:
     - vgrd
   wind_speed:
     - 풍속
+
+  # ── 강수 (precipitation) ──
+  precipitation_amount:
+    - 강수량
+    - 누적강수
+    - 총강수량
+    - prcp
+    - prcptot
+    - apcp
+    - pcp
+  precipitation_flux:
+    - 강수
+    - 강수율
+    - pr
+  lwe_precipitation_rate:
+    - 강수강도
+    - qpe
+    - imerg
+    - gsmap
+    - cmorph
+  rainfall_amount:
+    - 강우량
+    - 우량
+    - 비
+  rainfall_rate:
+    - 강우강도
+    - 시우량
+    - rainrate
+    - rain_rate
+  thickness_of_rainfall_amount:
+    - 일강수량
+  convective_precipitation_flux:
+    - 대류성강수
+  stratiform_precipitation_flux:
+    - 층운성강수
+
+  # ── 해빙·빙권 (sea ice) ──
+  sea_ice_area_fraction:
+    - 해빙농도
+    - siconc
+    - sic
+    - ice_conc
+    - ice_concentration
+  sea_ice_thickness:
+    - 해빙두께
+    - sithick
+    - sit
+    - ice_thickness
+  sea_ice_volume:
+    - 해빙부피
+    - sivol
+  sea_ice_extent:
+    - 해빙범위
+    - siextent
+  sea_ice_x_velocity:
+    - siu
+    - ice_u
+  sea_ice_y_velocity:
+    - ice_v
+  sea_ice_speed:
+    - 해빙표류
+    - ice_drift
+    - sispeed
+  age_of_sea_ice:
+    - 해빙나이
+    - siage
+    - ice_age
+
+  # ── 대기질·대기화학 (air quality) ──
+  mass_concentration_of_pm2p5_ambient_aerosol_in_air:
+    - 초미세먼지
+    - pm2.5
+    - pm25
+  mass_concentration_of_pm10_ambient_aerosol_in_air:
+    - 미세먼지
+    - pm10
+  mole_fraction_of_ozone_in_air:
+    - 오존
+    - o3
+  mole_fraction_of_nitrogen_dioxide_in_air:
+    - 이산화질소
+    - no2
+  mole_fraction_of_sulfur_dioxide_in_air:
+    - 아황산가스
+    - 이산화황
+    - so2
+  mole_fraction_of_carbon_monoxide_in_air:
+    - 일산화탄소
+  atmosphere_optical_thickness_due_to_aerosol:
+    - aod
+    - 에어로졸광학두께
+
+  # ── 수문·하천 (hydrology) ──
+  water_volume_transport_in_river_channel:
+    - 유량
+    - 하천유량
+    - discharge
+    - streamflow
+  river_discharge:
+    - 방류량
+  runoff_amount:
+    - 유출량
+    - runoff
+
+  # ── 육상(지표) (land surface) ──
+  mass_content_of_water_in_soil_layer:
+    - 토양수분
+    - soil_moisture
+    - soilmoisture
+  surface_temperature:
+    - 지표온도
+    - lst
+  water_evapotranspiration_flux:
+    - 증발산
+    - evapotranspiration
+  surface_snow_amount:
+    - 적설량
+    - swe
+  surface_snow_area_fraction:
+    - 적설면적
+  leaf_area_index:
+    - 엽면적지수
+    - lai
+  surface_albedo:
+    - 알베도
+    - albedo
+
+  # ── 구름·복사 (clouds & radiation) ──
+  surface_downwelling_shortwave_flux_in_air:
+    - 하향단파복사
+    - rsds
+  surface_downwelling_longwave_flux_in_air:
+    - 하향장파복사
+    - rlds
+  toa_outgoing_longwave_flux:
+    - olr
+    - rlut
+  toa_outgoing_shortwave_flux:
+    - rsut
+  cloud_area_fraction:
+    - 운량
+    - 구름량
+    - clt
+
+  # ── 해양 생지화학·해색 (ocean BGC) ──
+  mass_concentration_of_chlorophyll_in_sea_water:
+    - 엽록소
+    - chlorophyll
+    - chl
+    - chla
+    - chl_a
+  mole_concentration_of_dissolved_molecular_oxygen_in_sea_water:
+    - 용존산소
+    - 산소
+    - o2
+  sea_water_ph_reported_on_total_scale:
+    - ph
+    - 해양산성도
+  surface_partial_pressure_of_carbon_dioxide_in_sea_water:
+    - pco2
+  mole_concentration_of_nitrate_in_sea_water:
+    - 질산염
+    - nitrate
+
+  # ── 우주기상 (space weather) ──
+  geomagnetic_disturbance_storm_time_index:
+    - dst
+  geomagnetic_kp_index:
+    - kp
+  total_electron_content:
+    - tec
+    - vtec
+  solar_wind_speed:
+    - 태양풍속도

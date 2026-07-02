@@ -72,7 +72,7 @@ shape = d.grid_shape()  # (ny, nx) or (nlat, nlon)
 
 ```python
 # SAMPLE — mesh 위상은 모델마다 다름; latitude/longitude 가 coord가 아닌
-# data variable 일 수 있음 (synth_waves.ww3_mesh_like() 참조).
+# data variable 일 수 있음.
 import numpy as np
 
 # 노드 좌표 (mesh 의 경우 xr.Dataset 안 data variable)
@@ -439,7 +439,6 @@ if "MAPSTA" in xr_ds:
 | `scripts/router.py` | `detect_domain` | 도메인 분류(waves/met/…) |
 | `scripts/qc.py` | `run_qc`, `check_variable` | 층위1 QC(범위·결측·격자·시간) |
 | `scripts/report.py` | `write_report`, `render_markdown` | QC 리포트 생성 |
-| `tests/synth_waves.py` | `ww3_mesh_like`, `buoy_obs_like` | 합성 fixture (테스트·개발용) |
 | `config/domains.yaml` | waves 도메인 규칙 | hs 표준명·이름 패턴 |
 
 ---

@@ -1,8 +1,11 @@
 import matplotlib; matplotlib.use("Agg")  # noqa: E402 — 첫 줄 필수(백엔드 고정)
-"""파랑 모델 검증용 그림 SAMPLE 모듈.
+"""범용 검증 그림 SAMPLE 모듈 (전 도메인 공용 — 특정 분야 전용 아님).
 
+scatter_si·timeseries_overlay·diff_map·qq_plot·taylor_diagram 은 도메인 무관 공용이고,
+wave_rose 는 이름과 달리 **모든 방향변수**(풍향·유향·파향 등)에 쓰는 극좌표 로즈다.
 SAMPLE — 캡션 §G(reference≠truth·advisory·단일그림금지) 강제.
-도메인별 그림은 카탈로그(project/research/figures)를 보고 실시간 작성하라.
+도메인별 특화 그림은 카탈로그(references/research/figures 16~38)를 보고 실시간 작성하라.
+지도(위경도) 그림엔 해안선+위경도 필수 — add_basemap() 사용. 상세: references/plotting_maps.md.
 이 파일은 대략적 구조 파악 + 적응의 출발점이 되는 SAMPLE/템플릿이다.
 완비 금지 — 대표 샘플만 제공. 실데이터에선 구조를 실시간 점검하고
 도메인 맞춤 코드로 적응하라.
@@ -12,8 +15,130 @@ import os
 from pathlib import Path
 from typing import Union
 
+import warnings
+
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
+
+
+# ---------------------------------------------------------------------------
+# 지도 basemap — 해안선·육지·위경도 라벨 (cartopy; 없거나 오프라인이면 격자선 fallback)
+#   규칙: 축이 경도/위도인 그림은 반드시 이 헬퍼로 위치정보를 넣는다.
+#   상세·오프라인 캐시·정점 위치표시: references/plotting_maps.md
+# ---------------------------------------------------------------------------
+
+def _data_bbox(lon, lat, margin_deg: float = 0.5):
+    """데이터의 [w, e, s, n] 경계 + 여백 (NaN 안전, 단일점도 0크기 방지)."""
+    lon = np.asarray(lon, dtype=float)
+    lat = np.asarray(lat, dtype=float)
+    w = float(np.nanmin(lon)) - margin_deg
+    e = float(np.nanmax(lon)) + margin_deg
+    s = float(np.nanmin(lat)) - margin_deg
+    n = float(np.nanmax(lat)) + margin_deg
+    if e - w < 2 * margin_deg:
+        c = 0.5 * (w + e); w, e = c - margin_deg, c + margin_deg
+    if n - s < 2 * margin_deg:
+        c = 0.5 * (s + n); s, n = c - margin_deg, c + margin_deg
+    return [w, e, s, n]
+
+
+def _auto_resolution(extent) -> str:
+    """지도 span(도)으로 Natural Earth 해안선 해상도 선택."""
+    span = max(extent[1] - extent[0], extent[3] - extent[2])
+    if span <= 15:
+        return "10m"   # 지역/연안 확대 → 정밀
+    if span <= 60:
+        return "50m"
+    return "110m"      # 전지구/해역 → 저해상도로 충분
+
+
+def _fallback_graticule(ax, extent, msg: str):
+    """cartopy 불가 시 순수 matplotlib 격자선(위경도 라벨) — 그림이 비지 않게 + 경고."""
+    warnings.warn(
+        f"add_basemap: 해안선 없이 격자선만 그림 ({msg}). "
+        "제대로 된 지도를 원하면 cartopy 설치 + Natural Earth 데이터 캐시 "
+        "(references/plotting_maps.md D절 참조).",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    ax.set_xlim(extent[0], extent[1])
+    ax.set_ylim(extent[2], extent[3])
+    # 중위도 왜곡 보정 (1° lon ≠ 1° lat)
+    mean_lat = 0.5 * (extent[2] + extent[3])
+    denom = np.cos(np.deg2rad(mean_lat))
+    if denom > 1e-6:
+        ax.set_aspect(1.0 / denom)
+    ax.grid(True, linestyle="--", color="0.6", alpha=0.6)
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter(
+        lambda x, _: f"{abs(x):g}°{'E' if x >= 0 else 'W'}"))
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(
+        lambda y, _: f"{abs(y):g}°{'N' if y >= 0 else 'S'}"))
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+    ax.text(0.99, 0.01, "no coastline (offline)", transform=ax.transAxes,
+            ha="right", va="bottom", fontsize=7, color="crimson", alpha=0.8)
+    return ax
+
+
+def add_basemap(ax, lon, lat, margin_deg: float = 0.5, resolution=None,
+                land: bool = True, gridlabels: bool = True):
+    """해안선+육지+라벨된 위경도 격자선을 ax에 추가하고 extent를 데이터 bbox+여백으로 설정.
+
+    cartopy 경로를 쓰려면 ax가 GeoAxes여야 한다(_make_geo_axes 사용).
+    cartopy/데이터 부재·오프라인 등 어떤 실패에도 예외를 던지지 않고
+    격자선-only fallback으로 강등 + 경고한다. ax를 반환.
+    """
+    extent = _data_bbox(lon, lat, margin_deg)
+    if resolution is None:
+        resolution = _auto_resolution(extent)
+    try:
+        import cartopy.crs as ccrs
+        import cartopy.feature as cfeature
+        from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+    except Exception as e:                       # cartopy 미설치
+        return _fallback_graticule(ax, extent, f"cartopy import 실패: {e}")
+
+    if not hasattr(ax, "projection"):            # GeoAxes 아님
+        return _fallback_graticule(ax, extent, "ax가 cartopy GeoAxes가 아님")
+
+    try:
+        ax.set_extent(extent, crs=ccrs.PlateCarree())
+        if land:
+            ax.add_feature(cfeature.LAND.with_scale(resolution),
+                           facecolor="0.85", zorder=0)
+        ax.add_feature(cfeature.COASTLINE.with_scale(resolution),
+                       linewidth=0.6, zorder=1)
+        gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=gridlabels,
+                          linewidth=0.5, color="gray", alpha=0.5, linestyle="--")
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.xformatter = LongitudeFormatter()     # 축마다 새 인스턴스
+        gl.yformatter = LatitudeFormatter()
+        return ax
+    except Exception as e:
+        # 대개 Natural Earth shapefile 미캐시 + 네트워크 없음.
+        try:
+            ax.set_extent(extent, crs=ccrs.PlateCarree())
+        except Exception:
+            pass
+        return _fallback_graticule(ax, extent, f"cartopy 런타임 오류: {e}")
+
+
+def _make_geo_axes(figsize=(6, 5)):
+    """cartopy 있으면 (fig, GeoAxes, PlateCarree transform), 없으면 (fig, Axes, None).
+
+    반환된 transform은 pcolormesh/scatter에 `**({'transform': tr} if tr else {})` 로 전달.
+    """
+    try:
+        import cartopy.crs as ccrs
+        fig, ax = plt.subplots(figsize=figsize,
+                               subplot_kw={"projection": ccrs.PlateCarree()})
+        return fig, ax, ccrs.PlateCarree()
+    except Exception:
+        fig, ax = plt.subplots(figsize=figsize)
+        return fig, ax, None
+
 
 # ---------------------------------------------------------------------------
 # 내부 유틸 — NaN 안전
@@ -199,7 +324,7 @@ def diff_map(
     """격자(2D) 또는 점(1D) 위치에서의 (예보 − 관측) 편차 발산 맵.
 
     2D 배열이면 pcolormesh 발산 맵, 1D·점 배열이면 scatter 맵.
-    cartopy 없이 동작. 실데이터에선 배경지도·투영법을 추가하라.
+    add_basemap()으로 해안선·육지·위경도를 자동으로 씌운다(cartopy 없으면 격자선 fallback).
 
     Parameters
     ----------
@@ -218,7 +343,7 @@ def diff_map(
     Notes — §G Advisory Caption
     ---------------------------
     SAMPLE — advisory 편차 분포 참고도다.
-    배경 해안선 없음(실데이터 적용 시 cartopy 또는 basemap 추가 권장).
+    해안선·위경도는 add_basemap()이 그린다(오프라인이면 격자선만 + 경고).
     관측 위치는 reference 이며 truth 아님.
     단일 그림만으로 모델 성능을 결론짓지 마라.
     """
@@ -228,7 +353,8 @@ def diff_map(
     out_png = str(out_png)
     unit_label = f" [{units}]" if units else ""
 
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax, transform = _make_geo_axes(figsize=(6, 5))
+    plot_kw = {"transform": transform} if transform is not None else {}
 
     if lat_arr.ndim == 2 and lon_arr.ndim == 2 and diff_arr.ndim == 2:
         # pcolormesh — 2D 격자
@@ -236,7 +362,7 @@ def diff_map(
         vmax = float(np.max(np.abs(fin_vals))) if fin_vals.size > 0 else 1.0
         diff_masked = np.ma.masked_invalid(diff_arr)
         sc = ax.pcolormesh(lon_arr, lat_arr, diff_masked, cmap="RdBu_r",
-                           vmin=-vmax, vmax=vmax, shading="auto")
+                           vmin=-vmax, vmax=vmax, shading="auto", **plot_kw)
     else:
         # scatter — 1D 점
         lat_r = lat_arr.ravel()
@@ -246,13 +372,14 @@ def diff_map(
         lat_c, lon_c, dv = lat_r[mask], lon_r[mask], diff_r[mask]
         vmax = float(np.nanmax(np.abs(dv))) if dv.size > 0 else 1.0
         sc = ax.scatter(lon_c, lat_c, c=dv, cmap="RdBu_r",
-                        vmin=-vmax, vmax=vmax, s=30, alpha=0.8)
+                        vmin=-vmax, vmax=vmax, s=30, alpha=0.8, **plot_kw)
+
+    # 해안선·육지·위경도 격자선 (cartopy 없으면 격자선 fallback + 경고)
+    add_basemap(ax, lon_arr, lat_arr)
 
     cbar = fig.colorbar(sc, ax=ax, pad=0.02)
     cbar.set_label(f"Bias (F−O){unit_label}", fontsize=9)
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
-    ax.set_title(f"{title}\n(advisory — reference≠truth, no basemap)")
+    ax.set_title(f"{title}\n(advisory — reference≠truth)")
     fig.tight_layout()
 
     os.makedirs(os.path.dirname(os.path.abspath(out_png)), exist_ok=True)
